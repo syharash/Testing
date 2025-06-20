@@ -20,6 +20,7 @@ debug = st.sidebar.checkbox("🔧 Enable debug info")
 #)
 # Load the JSON credentials from secrets
 import json
+# ✅ Directly reference top-level secret
 creds_info = json.loads(st.secrets["gcp_credentials"])
 creds = service_account.Credentials.from_service_account_info(
     creds_info,
