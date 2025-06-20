@@ -6,7 +6,7 @@ from openpyxl import load_workbook
 import io
 from datetime import datetime
 import sys
-import jason
+import json
 
 st.set_page_config(page_title="📘 Excel Entry Tool", layout="centered")
 st.title("📘 Google Drive Excel Entry via Service Account")
