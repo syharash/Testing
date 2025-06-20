@@ -6,7 +6,7 @@ from openpyxl import load_workbook
 import io
 from datetime import datetime
 import sys
-import json
+
 
 st.set_page_config(page_title="📘 Excel Entry Tool", layout="centered")
 st.title("📘 Google Drive Excel Entry via Service Account")
@@ -19,7 +19,8 @@ debug = st.sidebar.checkbox("🔧 Enable debug info")
 #    scopes=["https://www.googleapis.com/auth/drive"]
 #)
 # Load the JSON credentials from secrets
-creds_info = json.loads(st.secrets["gcp_credentials"])
+import json
+creds_info = json.loads(st.secrets["general"]["gcp_credentials"])
 creds = service_account.Credentials.from_service_account_info(
     creds_info,
     scopes=["https://www.googleapis.com/auth/drive"]
