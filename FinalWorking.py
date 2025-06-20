@@ -20,7 +20,7 @@ debug = st.sidebar.checkbox("🔧 Enable debug info")
 #)
 # Load the JSON credentials from secrets
 import json
-creds_info = json.loads(st.secrets["general"]["gcp_credentials"])
+creds_info = json.loads(st.secrets["gcp_credentials"])
 creds = service_account.Credentials.from_service_account_info(
     creds_info,
     scopes=["https://www.googleapis.com/auth/drive"]
