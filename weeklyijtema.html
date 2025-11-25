@@ -1,0 +1,115 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Ijtima Performance Data</title>
+  <script type="text/javascript" src="https://www.gstatic.com/charts/loader.js"></script>
+  <script type="text/javascript">
+    google.charts.load('current', {'packages':['table']});
+    google.charts.setOnLoadCallback(init);
+
+    // Replace with your actual Google Sheet ID
+    let sheetUrl = 'https://docs.google.com/spreadsheets/d/2PACX-1vQWjaydhRWo4lwMeuzNvTj2yCqed3jZbo8NqOBz2eOq69kitEPPii_2uhGX7PpBeyWi4Ew16eRIzUsg/gviz/tq?sheet=Sheet1&headers=1';
+
+
+    let allData; // store full dataset for cascading filters
+
+    function init() {
+      loadData();
+    }
+
+    function loadData(stateFilter = '', cityFilter = '') {
+      // Assuming column E = State, F = City, G–O = rest
+      let queryString = "SELECT E, F, G, H, I, J, K, L, M, N, O";
+
+      let conditions = [];
+      if (stateFilter) conditions.push("E = '" + stateFilter + "'");
+      if (cityFilter) conditions.push("F = '" + cityFilter + "'");
+
+      if (conditions.length > 0) queryString += " WHERE " + conditions.join(" AND ");
+
+      let query = new google.visualization.Query(sheetUrl + "&tq=" + encodeURIComponent(queryString));
+      query.send(handleQueryResponse);
+    }
+
+    function handleQueryResponse(response) {
+      if (response.isError()) {
+        alert('Error: ' + response.getMessage());
+        return;
+      }
+      let data = response.getDataTable();
+      allData = data; // keep full dataset for dropdown logic
+
+      // Rename columns for readability
+      data.setColumnLabel(0, "State");
+      data.setColumnLabel(1, "City");
+      data.setColumnLabel(2, "Number of Participants");
+      data.setColumnLabel(3, "Invitation through calls");
+      data.setColumnLabel(4, "Intentions before Tilawat");
+      data.setColumnLabel(5, "Intentions before Naat");
+      data.setColumnLabel(6, "Duration of Bayan (minutes)");
+      data.setColumnLabel(7, "Was Madani Halqa Conducted?");
+      data.setColumnLabel(8, "Was Sunnahs and Manners taught?");
+      data.setColumnLabel(9, "Was Learning/Memorizing Dua conducted?");
+      data.setColumnLabel(10, "Was Pious Deed Booklet filled with everyone?");
+
+      let table = new google.visualization.Table(document.getElementById('table_div'));
+      table.draw(data, {showRowNumber: true, width: '100%', height: '100%'});
+
+      populateFilters(allData);
+    }
+
+    function populateFilters(data) {
+      let states = new Set();
+      let citiesByState = new Map();
+
+      for (let i = 0; i < data.getNumberOfRows(); i++) {
+        let state = data.getValue(i, 0);
+        let city = data.getValue(i, 1);
+        states.add(state);
+
+        if (!citiesByState.has(state)) citiesByState.set(state, new Set());
+        citiesByState.get(state).add(city);
+      }
+
+      let stateSelect = document.getElementById('stateFilter');
+      stateSelect.innerHTML = '<option value="">All States</option>';
+      states.forEach(s => stateSelect.innerHTML += `<option value="${s}">${s}</option>`);
+
+      // Reset city dropdown
+      let citySelect = document.getElementById('cityFilter');
+      citySelect.innerHTML = '<option value="">All Cities</option>';
+
+      // Store mapping for later
+      window.citiesByState = citiesByState;
+    }
+
+    function updateCities() {
+      let selectedState = document.getElementById('stateFilter').value;
+      let citySelect = document.getElementById('cityFilter');
+      citySelect.innerHTML = '<option value="">All Cities</option>';
+
+      if (!selectedState) return;
+
+      let cities = window.citiesByState.get(selectedState) || new Set();
+      cities.forEach(c => citySelect.innerHTML += `<option value="${c}">${c}</option>`);
+    }
+
+    function applyFilters() {
+      let state = document.getElementById('stateFilter').value;
+      let city = document.getElementById('cityFilter').value;
+      loadData(state, city);
+    }
+  </script>
+</head>
+<body>
+  <h2>Ijtima Performance Data (Dynamic State + City Filters)</h2>
+
+  <label for="stateFilter">State:</label>
+  <select id="stateFilter" onchange="updateCities(); applyFilters();"></select>
+
+  <label for="cityFilter">City:</label>
+  <select id="cityFilter" onchange="applyFilters()"></select>
+
+  <div id="table_div"></div>
+</body>
+</html>
