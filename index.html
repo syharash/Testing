@@ -109,7 +109,7 @@
       const password = document.getElementById('password').value;
       try {
         await login(email, password);
-        const assignedState = getUserState();
+        const assignedStates = getUserState();
 
       const stateSel = document.getElementById('stateFilter');
         if (Array.isArray(assignedStates) && assignedStates.length > 0) {
