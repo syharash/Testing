@@ -235,10 +235,10 @@
         const c = getVal(masterData, r, 2);
 
         const match =
-          (!selections.month || m === selections.month) &&
-          (!selections.date  || d === selections.date) &&
+          (!selections.month || normalize(m) === normalize(selections.month)) &&
+          (!selections.date  || normalize(d) === normalize(selections.date)) &&
           (!selections.state || (stateCityMap[selections.state] && stateCityMap[selections.state].includes(c))) &&
-          (!selections.city  || c === selections.city);
+          (!selections.city  || normalize(c) === normalize(selections.city));
 
         if (match) rows.push(r);
       }
