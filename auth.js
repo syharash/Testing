@@ -1,5 +1,9 @@
-// auth.js
-// Firebase Authentication + Firestore profile management
+// auth.js (Firebase v9 modular style)
+
+// Import Firebase modules directly from CDN
+import { initializeApp } from "https://www.gstatic.com/firebasejs/9.6.1/firebase-app.js";
+import { getAuth, signInWithEmailAndPassword, signOut } from "https://www.gstatic.com/firebasejs/9.6.1/firebase-auth.js";
+import { getFirestore, doc, getDoc } from "https://www.gstatic.com/firebasejs/9.6.1/firebase-firestore.js";
 
 // --- Firebase Initialization ---
 const firebaseConfig = {
@@ -11,20 +15,24 @@ const firebaseConfig = {
   appId: "YOUR_APP_ID"
 };
 
-firebase.initializeApp(firebaseConfig);
-const auth = firebase.auth();
-const db = firebase.firestore();
+const app = initializeApp(firebaseConfig);
+const auth = getAuth(app);
+const db = getFirestore(app);
 
 let currentUserProfile = null;
 
 // --- Login Function ---
 export async function login(email, password) {
   try {
-    const userCredential = await auth.signInWithEmailAndPassword(email, password);
+    const userCredential = await signInWithEmailAndPassword(auth, email, password);
     const uid = userCredential.user.uid;
-    const doc = await db.collection("users").doc(uid).get();
-    if (doc.exists) {
-      currentUserProfile = doc.data();
+
+    // Fetch user profile from Firestore
+    const docRef = doc(db, "users", uid);
+    const docSnap = await getDoc(docRef);
+
+    if (docSnap.exists()) {
+      currentUserProfile = docSnap.data();
       return currentUserProfile;
     } else {
       throw new Error("No profile found for this user.");
@@ -36,7 +44,7 @@ export async function login(email, password) {
 
 // --- Logout Function ---
 export async function logout() {
-  await auth.signOut();
+  await signOut(auth);
   currentUserProfile = null;
 }
 
