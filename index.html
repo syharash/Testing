@@ -93,6 +93,12 @@
       "Washington": ["Lynnwood, WA"]
     };
 
+    let cachedFilters = {
+      years: [],
+      months: [],
+      dates: [],
+      cities: []
+    };
     let masterData = null;
     let table = null;
     const selections = { month: '', date: '', state: '', city: '', year: '' };
@@ -188,88 +194,82 @@
       return val ? val.toString().trim().toLowerCase() : '';
     }
 
-    function refreshFilterOptions() {
-  // Year dropdown
-  const yearSel = document.getElementById('yearFilter');
-  yearSel.innerHTML = '<option value="">All Years</option>';
-  getAllYears().forEach(y => {
-    yearSel.innerHTML += `<option value="${y}"${selections.year === y ? ' selected' : ''}>${y}</option>`;
-  });
+    function buildFilterCache() {
+  const years = new Set();
+  const months = new Set();
+  const dates = new Set();
+  const cities = new Set();
 
-  // Month dropdown (context-aware)
-  const monthSel = document.getElementById('monthFilter');
-  monthSel.innerHTML = '<option value="">All Months</option>';
-  getAllMonths().forEach(m => {
-    monthSel.innerHTML += `<option value="${m}"${selections.month === m ? ' selected' : ''}>${m}</option>`;
-  });
+  for (let r = 0; r < masterData.getNumberOfRows(); r++) {
+    const m = getVal(masterData, r, 0); // "Month & Year"
+    const d = getVal(masterData, r, 1); // Date (Friday)
+    const c = getVal(masterData, r, 2); // City
 
-  // Date dropdown
-  const dateSel = document.getElementById('dateFilter');
-  dateSel.innerHTML = '<option value="">All Dates</option>';
-  getAllDates().forEach(d => {
-  dateSel.innerHTML += `<option value="${d}"${selections.date === d ? ' selected' : ''}>${d}</option>`;
-});
+    if (m) {
+      const yearMatch = m.match(/\b\d{4}\b/);
+      if (yearMatch) years.add(yearMatch[0]);
 
-  // City dropdown
-const citySel = document.getElementById('cityFilter');
-citySel.innerHTML = '<option value="">All Cities</option>';
+      if (!selections.year || m.includes(selections.year)) {
+        months.add(m);
+      }
 
-if (selections.state && stateCityMap[selections.state]) {
-  // If a state is locked or selected, show only its cities that match Year/Month
-  stateCityMap[selections.state].forEach(c => {
-    if (getAllCities().includes(c)) {
-      citySel.innerHTML += `<option value="${escapeHtml(c)}"${selections.city === c ? ' selected' : ''}>${escapeHtml(c)}</option>`;
+      const year = yearMatch ? yearMatch[0] : '';
+      const matchesYear = !selections.year || (year && year === selections.year);
+      const matchesMonth = !selections.month || normalize(m) === normalize(selections.month);
+
+      if (d && matchesYear && matchesMonth) {
+        dates.add(d);
+      }
+      if (c && matchesYear && matchesMonth) {
+        cities.add(c);
+      }
     }
-  });
-} else {
-  // Otherwise show all cities that match Year/Month
-  getAllCities().forEach(c => {
-    citySel.innerHTML += `<option value="${escapeHtml(c)}"${selections.city === c ? ' selected' : ''}>${escapeHtml(c)}</option>`;
-  });
-}
+  }
 
+  cachedFilters = {
+    years: [...years].sort(),
+    months: [...months].sort(),
+    dates: [...dates].sort(),
+    cities: [...cities].sort()
+  };
+}
+   
+// --- Helper functions ---
 function getAllYears() {
   const allYears = new Set();
   for (let r = 0; r < masterData.getNumberOfRows(); r++) {
     const m = getVal(masterData, r, 0); // "Month & Year" column
     if (m) {
-      // Extract year (last 4 digits)
       const yearMatch = m.match(/\b\d{4}\b/);
       if (yearMatch) allYears.add(yearMatch[0]);
     }
   }
   return [...allYears].sort();
-}    
-    
-  function getAllMonths() {
+}
+
+function getAllMonths() {
   const allMonths = new Set();
   for (let r = 0; r < masterData.getNumberOfRows(); r++) {
-    const m = getVal(masterData, r, 0); // "Month & Year" column
+    const m = getVal(masterData, r, 0); // "Month & Year"
     if (m) {
       if (!selections.year || m.includes(selections.year)) {
-        // Only add months that match the selected year (if any)
         allMonths.add(m);
       }
     }
   }
   return [...allMonths].sort();
 }
-     
 
 function getAllDates() {
   const allDates = new Set();
   for (let r = 0; r < masterData.getNumberOfRows(); r++) {
     const m = getVal(masterData, r, 0); // "Month & Year"
     const d = getVal(masterData, r, 1); // Date (Friday)
-
     if (d) {
-      // Only add dates that match the selected year and month (if any)
       const yearMatch = m.match(/\b\d{4}\b/);
       const year = yearMatch ? yearMatch[0] : '';
-
       const matchesYear = !selections.year || (year && year === selections.year);
       const matchesMonth = !selections.month || normalize(m) === normalize(selections.month);
-
       if (matchesYear && matchesMonth) {
         allDates.add(d);
       }
@@ -277,30 +277,64 @@ function getAllDates() {
   }
   return [...allDates].sort();
 }
-      
-     
 
 function getAllCities() {
   const allCities = new Set();
   for (let r = 0; r < masterData.getNumberOfRows(); r++) {
     const m = getVal(masterData, r, 0); // "Month & Year"
-    const d = getVal(masterData, r, 1); // Date (Friday)
     const c = getVal(masterData, r, 2); // City
-
     if (c) {
-      // Extract year from "Month & Year"
       const yearMatch = m.match(/\b\d{4}\b/);
       const year = yearMatch ? yearMatch[0] : '';
-
       const matchesYear = !selections.year || (year && year === selections.year);
       const matchesMonth = !selections.month || normalize(m) === normalize(selections.month);
-
       if (matchesYear && matchesMonth) {
         allCities.add(c);
       }
     }
   }
   return [...allCities].sort();
+}
+
+// --- Refresh dropdowns ---
+function refreshFilterOptions() {
+  buildFilterCache(); // rebuild cache based on current selections
+
+  // Year dropdown
+  const yearSel = document.getElementById('yearFilter');
+  yearSel.innerHTML = '<option value="">All Years</option>';
+  cachedFilters.years.forEach(y => {
+    yearSel.innerHTML += `<option value="${y}"${selections.year === y ? ' selected' : ''}>${y}</option>`;
+  });
+
+  // Month dropdown
+  const monthSel = document.getElementById('monthFilter');
+  monthSel.innerHTML = '<option value="">All Months</option>';
+  cachedFilters.months.forEach(m => {
+    monthSel.innerHTML += `<option value="${m}"${selections.month === m ? ' selected' : ''}>${m}</option>`;
+  });
+
+  // Date dropdown
+  const dateSel = document.getElementById('dateFilter');
+  dateSel.innerHTML = '<option value="">All Dates</option>';
+  cachedFilters.dates.forEach(d => {
+    dateSel.innerHTML += `<option value="${d}"${selections.date === d ? ' selected' : ''}>${d}</option>`;
+  });
+
+  // City dropdown
+  const citySel = document.getElementById('cityFilter');
+  citySel.innerHTML = '<option value="">All Cities</option>';
+  if (selections.state && stateCityMap[selections.state]) {
+    stateCityMap[selections.state].forEach(c => {
+      if (cachedFilters.cities.includes(c)) {
+        citySel.innerHTML += `<option value="${escapeHtml(c)}"${selections.city === c ? ' selected' : ''}>${escapeHtml(c)}</option>`;
+      }
+    });
+  } else {
+    cachedFilters.cities.forEach(c => {
+      citySel.innerHTML += `<option value="${escapeHtml(c)}"${selections.city === c ? ' selected' : ''}>${escapeHtml(c)}</option>`;
+    });
+  }
 }
 
 function drawFilteredView() {
