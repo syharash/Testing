@@ -31,9 +31,15 @@
   <div id="dashboardDiv" style="display:none;">
     <button id="logoutBtn">Logout</button>
     <div class="filters">
-     <div class="field">
-      <label for="monthFilter">Month & Year</label>
-      <select id="monthFilter"></select>
+    
+      <div class="field">
+        <label for="yearFilter">Year</label>
+        <select id="yearFilter"></select>
+      </div>
+      
+      <div class="field">
+        <label for="monthFilter">Month & Year</label>
+        <select id="monthFilter"></select>
     </div>
 
     <div class="field">
@@ -65,6 +71,7 @@
 
     google.charts.load('current', {'packages':['table']});
     google.charts.setOnLoadCallback(init);
+    document.getElementById('yearFilter').addEventListener('change', onYearChange);
     document.getElementById('monthFilter').addEventListener('change', onMonthChange);
     document.getElementById('dateFilter').addEventListener('change', onDateChange);
     document.getElementById('stateFilter').addEventListener('change', onStateChange);
@@ -88,7 +95,7 @@
 
     let masterData = null;
     let table = null;
-    const selections = { month: '', date: '', state: '', city: '' };
+    const selections = { month: '', date: '', state: '', city: '', year: '' };
 
     // --- Login Button ---
     document.getElementById('loginBtn').addEventListener('click', async () => {
@@ -182,57 +189,65 @@
     }
 
     function refreshFilterOptions() {
-     for (let r = 0; r < masterData.getNumberOfRows(); r++) {
-        const m = getVal(masterData, r, 0);
-        const d = getVal(masterData, r, 1);
-        const c = getVal(masterData, r, 2);
+  // Year dropdown
+  const yearSel = document.getElementById('yearFilter');
+  yearSel.innerHTML = '<option value="">All Years</option>';
+  getAllYears().forEach(y => {
+    yearSel.innerHTML += `<option value="${y}"${selections.year === y ? ' selected' : ''}>${y}</option>`;
+  });
 
-        const match =
-          (!selections.month || normalize(m) === normalize(selections.month)) &&
-          (!selections.date  || normalize(d) === normalize(selections.date)) &&
-          (!selections.state || (stateCityMap[selections.state] && stateCityMap[selections.state].includes(c))) &&
-          (!selections.city  || normalize(c) === normalize(selections.city));
+  // Month dropdown (context-aware)
+  const monthSel = document.getElementById('monthFilter');
+  monthSel.innerHTML = '<option value="">All Months</option>';
+  getAllMonths().forEach(m => {
+    monthSel.innerHTML += `<option value="${m}"${selections.month === m ? ' selected' : ''}>${m}</option>`;
+  });
 
-        if (match) {
-          months.add(m);
-          dates.add(d);
-          cities.add(c);
-        }
-      }
-      
-      const monthSel = document.getElementById('monthFilter');
-      monthSel.innerHTML = '<option value="">All Months</option>';
-      getAllMonths().forEach(m => {
-      monthSel.innerHTML += `<option value="${m}"${selections.month === m ? ' selected' : ''}>${m}</option>`;
-      });
+  // Date dropdown
+  const dateSel = document.getElementById('dateFilter');
+  dateSel.innerHTML = '<option value="">All Dates</option>';
+  getAllDates().forEach(d => {
+    dateSel.innerHTML += `<option value="${d}"${selections.date === d ? ' selected' : ''}>${d}</option>`;
+  });
 
-      const dateSel = document.getElementById('dateFilter');
-      dateSel.innerHTML = '<option value="">All Dates</option>';
-      getAllDates().forEach(d => {
-      dateSel.innerHTML += `<option value="${d}"${selections.date === d ? ' selected' : ''}>${d}</option>`;
-      });
-
-     const citySel = document.getElementById('cityFilter');
-     citySel.innerHTML = '<option value="">All Cities</option>';
-
-    if (selections.state && stateCityMap[selections.state]) {
-    // If a state is locked or selected, show only its cities
+  // City dropdown
+  const citySel = document.getElementById('cityFilter');
+  citySel.innerHTML = '<option value="">All Cities</option>';
+  if (selections.state && stateCityMap[selections.state]) {
     stateCityMap[selections.state].forEach(c => {
-    citySel.innerHTML += `<option value="${escapeHtml(c)}"${selections.city === c ? ' selected' : ''}>${escapeHtml(c)}</option>`;
+      citySel.innerHTML += `<option value="${escapeHtml(c)}"${selections.city === c ? ' selected' : ''}>${escapeHtml(c)}</option>`;
     });
   } else {
-  // Otherwise show all cities from the sheet
     getAllCities().forEach(c => {
-    citySel.innerHTML += `<option value="${escapeHtml(c)}"${selections.city === c ? ' selected' : ''}>${escapeHtml(c)}</option>`;
-  });
+      citySel.innerHTML += `<option value="${escapeHtml(c)}"${selections.city === c ? ' selected' : ''}>${escapeHtml(c)}</option>`;
+    });
   }
 }
-  function getAllMonths() {
-    const allMonths = new Set();
-    for (let r = 0; r < masterData.getNumberOfRows(); r++) {
-      const m = getVal(masterData, r, 0);
-        allMonths.add(m);
+
+function getAllYears() {
+  const allYears = new Set();
+  for (let r = 0; r < masterData.getNumberOfRows(); r++) {
+    const m = getVal(masterData, r, 0); // "Month & Year" column
+    if (m) {
+      // Extract year (last 4 digits)
+      const yearMatch = m.match(/\b\d{4}\b/);
+      if (yearMatch) allYears.add(yearMatch[0]);
     }
+  }
+  return [...allYears].sort();
+}    
+    
+  function getAllMonths() {
+  const allMonths = new Set();
+  for (let r = 0; r < masterData.getNumberOfRows(); r++) {
+    const m = getVal(masterData, r, 0); // "Month & Year" column
+    if (m) {
+      if (!selections.year || m.includes(selections.year)) {
+        // Only add months that match the selected year (if any)
+        allMonths.add(m);
+      }
+    }
+  }
   return [...allMonths].sort();
 }
      
@@ -266,11 +281,13 @@ function drawFilteredView() {
         const d = getVal(masterData, r, 1);
         const c = getVal(masterData, r, 2);
 
-  const match =
-      (!selections.month || normalize(m) === normalize(selections.month)) &&
-      (!selections.date  || normalize(d) === normalize(selections.date)) &&
-      (!selections.state || (stateCityMap[selections.state] && stateCityMap[selections.state].includes(c))) &&
-      (!selections.city  || normalize(c) === normalize(selections.city));
+      const match =
+        (!selections.year || m.includes(selections.year)) &&
+        (!selections.month || normalize(m) === normalize(selections.month)) &&
+        (!selections.date  || normalize(d) === normalize(selections.date)) &&
+        (!selections.state || (stateCityMap[selections.state] && stateCityMap[selections.state].includes(c))) &&
+        (!selections.city  || normalize(c) === normalize(selections.city));
+    
       if (match) rows.push(r);
       }
 
@@ -278,6 +295,12 @@ function drawFilteredView() {
       table.draw(view, {showRowNumber: true, width: '100%', height: '100%'});
     }
 
+    function onYearChange() {
+      selections.year = document.getElementById('yearFilter').value;
+      refreshFilterOptions();
+      drawFilteredView();
+    }
+    
     function onMonthChange() {
       selections.month = document.getElementById('monthFilter').value;
       refreshFilterOptions();
