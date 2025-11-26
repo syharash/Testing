@@ -33,34 +33,36 @@
     <button id="logoutBtn">Logout</button>
   </div>
 
-  <!-- Filters -->
-  <div class="filters">
-    <div class="field">
-      <label for="monthFilter">Month & Year</label>
-      <select id="monthFilter" onchange="onMonthChange()"></select>
+  <!-- Dashboard (hidden until login) -->
+  <div id="dashboardDiv" style="display:none;">
+    <div class="filters">
+      <div class="field">
+        <label for="monthFilter">Month & Year</label>
+        <select id="monthFilter" onchange="onMonthChange()"></select>
+      </div>
+
+      <div class="field">
+        <label for="dateFilter">Date (Friday)</label>
+        <select id="dateFilter" onchange="onDateChange()"></select>
+      </div>
+
+      <div class="field">
+        <label for="stateFilter">State</label>
+        <select id="stateFilter" onchange="onStateChange()"></select>
+      </div>
+
+      <div class="field">
+        <label for="cityFilter">City</label>
+        <select id="cityFilter" onchange="onCityChange()"></select>
+      </div>
+
+      <div class="spacer"></div>
+      <button onclick="resetFilters()">Reset Filters</button>
     </div>
 
-    <div class="field">
-      <label for="dateFilter">Date (Friday)</label>
-      <select id="dateFilter" onchange="onDateChange()"></select>
-    </div>
-
-    <div class="field">
-      <label for="stateFilter">State</label>
-      <select id="stateFilter" onchange="onStateChange()"></select>
-    </div>
-
-    <div class="field">
-      <label for="cityFilter">City</label>
-      <select id="cityFilter" onchange="onCityChange()"></select>
-    </div>
-
-    <div class="spacer"></div>
-    <button onclick="resetFilters()">Reset Filters</button>
+    <!-- Table container -->
+    <div id="table_div"></div>
   </div>
-
-  <!-- Table container -->
-  <div id="table_div"></div>
 
   <!-- Dashboard Logic -->
   <script type="module">
@@ -69,12 +71,10 @@
     google.charts.load('current', {'packages':['table']});
     google.charts.setOnLoadCallback(init);
 
-
-
     // Replace with your actual Google Sheet ID
     const sheetUrl = 'https://docs.google.com/spreadsheets/d/11FCt-Uhffya434cBpGsNyotV1dUrMP_hkpeoLjYisdo/gviz/tq?sheet=Sheet1&headers=1';
 
-    // Synthetic mapping: States → Cities
+    // Synthetic mapping: States → Cities (ensure exact match to Column F values)
     const stateCityMap = {
       "California": ["Elk Grove, CA", "Riverside, CA", "Sacramento, CA", "Woodland, CA", "Yuba City, CA"],
       "Florida": ["Miami, FL", "Tampa, FL"],
@@ -89,7 +89,7 @@
       "Washington": ["Lynnwood, WA"]
     };
 
- let masterData = null;
+    let masterData = null;
     let table = null;
     const selections = { month: '', date: '', state: '', city: '' };
 
@@ -106,6 +106,10 @@
         stateSel.value = assignedState;
         stateSel.disabled = true;
 
+        // UI flow
+        document.getElementById('loginDiv').style.display = "none";
+        document.getElementById('dashboardDiv').style.display = "block";
+
         refreshFilterOptions();
         drawFilteredView();
       } catch (err) {
@@ -117,10 +121,16 @@
     document.getElementById('logoutBtn').addEventListener('click', async () => {
       await logout();
       selections.state = '';
+      selections.city = '';
       const stateSel = document.getElementById('stateFilter');
       stateSel.disabled = false;
-      refreshFilterOptions();
-      drawFilteredView();
+      stateSel.value = ''; // clear visible selection
+
+      // UI flow
+      document.getElementById('loginDiv').style.display = "block";
+      document.getElementById('dashboardDiv').style.display = "none";
+
+      resetFilters();
     });
 
     // --- Dashboard Initialization ---
@@ -151,12 +161,22 @@
       masterData.setColumnLabel(11, "Was Pious Deed Booklet filled with everyone?");
 
       table = new google.visualization.Table(document.getElementById('table_div'));
+      // Pre-populate State dropdown (visible but unlocked until login)
+      populateStateFilter();
       refreshFilterOptions();
       drawFilteredView();
     }
 
     function getVal(data, row, col) {
       return data.getFormattedValue(row, col) || data.getValue(row, col);
+    }
+
+    function populateStateFilter() {
+      const stateSel = document.getElementById('stateFilter');
+      stateSel.innerHTML = '<option value="">All States</option>';
+      Object.keys(stateCityMap).forEach(state => {
+        stateSel.innerHTML += `<option value="${escapeHtml(state)}">${escapeHtml(state)}</option>`;
+      });
     }
 
     function refreshFilterOptions() {
@@ -182,30 +202,29 @@
         }
       }
 
-
-     const monthSel = document.getElementById('monthFilter');
+      const monthSel = document.getElementById('monthFilter');
       monthSel.innerHTML = '<option value="">All Months</option>';
       [...months].sort().forEach(m => {
-        monthSel.innerHTML += `<option value="${m}"${selections.month === m ? ' selected' : ''}>${m}</option>`;
+        monthSel.innerHTML += `<option value="${escapeHtml(m)}"${selections.month === m ? ' selected' : ''}>${escapeHtml(m)}</option>`;
       });
 
       const dateSel = document.getElementById('dateFilter');
       dateSel.innerHTML = '<option value="">All Dates</option>';
       [...dates].sort().forEach(d => {
-        dateSel.innerHTML += `<option value="${d}"${selections.date === d ? ' selected' : ''}>${d}</option>`;
+        dateSel.innerHTML += `<option value="${escapeHtml(d)}"${selections.date === d ? ' selected' : ''}>${escapeHtml(d)}</option>`;
       });
 
       const citySel = document.getElementById('cityFilter');
       citySel.innerHTML = '<option value="">All Cities</option>';
-     if (selections.state && stateCityMap[selections.state]) {
-  stateCityMap[selections.state].forEach(c => {
-    citySel.innerHTML += `<option value="${c}"${selections.city === c ? ' selected' : ''}>${c}</option>`;
-  });
-} else {
-  [...cities].sort().forEach(c => {
-    citySel.innerHTML += `<option value="${c}"${selections.city === c ? ' selected' : ''}>${c}</option>`;
-  });
-}
+      if (selections.state && stateCityMap[selections.state]) {
+        stateCityMap[selections.state].forEach(c => {
+          citySel.innerHTML += `<option value="${escapeHtml(c)}"${selections.city === c ? ' selected' : ''}>${escapeHtml(c)}</option>`;
+        });
+      } else {
+        [...cities].sort().forEach(c => {
+          citySel.innerHTML += `<option value="${escapeHtml(c)}"${selections.city === c ? ' selected' : ''}>${escapeHtml(c)}</option>`;
+        });
+      }
     }
 
     function drawFilteredView() {
@@ -235,17 +254,20 @@
       refreshFilterOptions();
       drawFilteredView();
     }
+
     function onDateChange() {
       selections.date = document.getElementById('dateFilter').value;
       refreshFilterOptions();
       drawFilteredView();
     }
+
     function onStateChange() {
       selections.state = document.getElementById('stateFilter').value;
       selections.city = ''; // reset city when state changes
       refreshFilterOptions();
       drawFilteredView();
     }
+
     function onCityChange() {
       selections.city = document.getElementById('cityFilter').value;
       refreshFilterOptions();
@@ -255,42 +277,24 @@
     function resetFilters() {
       selections.month = '';
       selections.date = '';
-      selections.state = '';
+      // Keep state locked if logged in; otherwise clear
+      const stateSel = document.getElementById('stateFilter');
+      if (!stateSel.disabled) selections.state = '';
       selections.city = '';
+
       refreshFilterOptions();
       drawFilteredView();
     }
+
+    // Minimal HTML escaping for safety
+    function escapeHtml(str) {
+      return String(str)
+        .replace(/&/g, "&amp;")
+        .replace(/</g, "&lt;")
+        .replace(/>/g, "&gt;")
+        .replace(/"/g, "&quot;")
+        .replace(/'/g, "&#039;");
+    }
   </script>
-</head>
-<body>
-  <h2>Ijtima Performance Data (Month → Date → State → City)</h2>
-
-  <div class="filters">
-    <div class="field">
-      <label for="monthFilter">Month & Year</label>
-      <select id="monthFilter" onchange="onMonthChange()"></select>
-    </div>
-
-    <div class="field">
-      <label for="dateFilter">Date (Friday)</label>
-      <select id="dateFilter" onchange="onDateChange()"></select>
-    </div>
-
-    <div class="field">
-      <label for="stateFilter">State</label>
-      <select id="stateFilter" onchange="onStateChange()"></select>
-    </div>
-
-    <div class="field">
-      <label for="cityFilter">City</label>
-      <select id="cityFilter" onchange="onCityChange()"></select>
-    </div>
-
-    <div class="spacer"></div>
-    <button onclick="resetFilters()">Reset Filters</button>
-  </div>
-
-  <!-- Table container -->
-  <div id="table_div"></div>
 </body>
 </html>
