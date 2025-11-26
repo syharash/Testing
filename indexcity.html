@@ -2,115 +2,201 @@
 <html>
 <head>
   <title>Ijtima Performance Data</title>
+  <meta charset="utf-8">
+  <style>
+    body { font-family: system-ui, -apple-system, Segoe UI, Roboto, Arial; margin: 24px; }
+    h2 { margin-bottom: 12px; }
+    .filters { display: flex; gap: 16px; flex-wrap: wrap; align-items: end; margin-bottom: 16px; }
+    .field { display: flex; flex-direction: column; gap: 6px; }
+    select, button { padding: 6px 10px; }
+    .spacer { flex: 1; }
+  </style>
   <script type="text/javascript" src="https://www.gstatic.com/charts/loader.js"></script>
   <script type="text/javascript">
     google.charts.load('current', {'packages':['table']});
     google.charts.setOnLoadCallback(init);
 
-    // Replace with your actual Google Sheet ID
-    let sheetUrl = 'https://docs.google.com/spreadsheets/d/11FCt-Uhffya434cBpGsNyotV1dUrMP_hkpeoLjYisdo/gviz/tq?sheet=Sheet1&headers=1';
+    // Replace with your actual Google Sheet ID and tab name
+    const sheetUrl = 'https://docs.google.com/spreadsheets/d/11FCt-Uhffya434cBpGsNyotV1dUrMP_hkpeoLjYisdo/gviz/tq?sheet=Sheet1&headers=1';
 
-    let allData;
+    let masterData = null;   // Full dataset (D..O) loaded once
+    let table = null;        // Table instance
+    const selections = { month: '', date: '', city: '' };
 
     function init() {
-      loadData();
+      // Initial load: fetch all rows/columns needed once
+      const queryString = "SELECT D, E, F, G, H, I, J, K, L, M, N, O";
+      const query = new google.visualization.Query(sheetUrl + "&tq=" + encodeURIComponent(queryString));
+      query.send(handleInitialResponse);
     }
 
-    function loadData(monthFilter = '', dateFilter = '', cityFilter = '') {
-      // Columns D = Month/Year, E = Date, F = City, G–O = metrics
-      let queryString = "SELECT D, E, F, G, H, I, J, K, L, M, N, O";
-
-      let conditions = [];
-      if (monthFilter) conditions.push("D = '" + monthFilter + "'");
-      if (dateFilter) conditions.push("E = date '" + dateFilter + "'");
-      if (cityFilter) conditions.push("F = '" + cityFilter + "'");
-
-      if (conditions.length > 0) queryString += " WHERE " + conditions.join(" AND ");
-
-      let query = new google.visualization.Query(sheetUrl + "&tq=" + encodeURIComponent(queryString));
-      query.send(handleQueryResponse);
-    }
-
-    function handleQueryResponse(response) {
+    function handleInitialResponse(response) {
       if (response.isError()) {
-        alert('Error: ' + response.getMessage());
+        alert('Error loading data: ' + response.getMessage());
         return;
       }
-      let data = response.getDataTable();
-      allData = data;
+      masterData = response.getDataTable();
 
-      // Rename columns for readability
-      data.setColumnLabel(0, "Month & Year");
-      data.setColumnLabel(1, "Date (Friday)");
-      data.setColumnLabel(2, "City");
-      data.setColumnLabel(3, "Number of Participants");
-      data.setColumnLabel(4, "Invitation through calls");
-      data.setColumnLabel(5, "Intentions before Tilawat");
-      data.setColumnLabel(6, "Intentions before Naat");
-      data.setColumnLabel(7, "Duration of Bayan (minutes)");
-      data.setColumnLabel(8, "Was Madani Halqa Conducted?");
-      data.setColumnLabel(9, "Was Sunnahs and Manners taught?");
-      data.setColumnLabel(10, "Was Learning/Memorizing Dua conducted?");
-      data.setColumnLabel(11, "Was Pious Deed Booklet filled with everyone?");
+      // Label columns for readability
+      masterData.setColumnLabel(0, "Month & Year");            // D
+      masterData.setColumnLabel(1, "Date (Friday)");           // E
+      masterData.setColumnLabel(2, "City");                    // F
+      masterData.setColumnLabel(3, "Number of Participants");  // G
+      masterData.setColumnLabel(4, "Invitation through calls");// H
+      masterData.setColumnLabel(5, "Intentions before Tilawat");// I
+      masterData.setColumnLabel(6, "Intentions before Naat");  // J
+      masterData.setColumnLabel(7, "Duration of Bayan (minutes)"); // K
+      masterData.setColumnLabel(8, "Was Madani Halqa Conducted?"); // L
+      masterData.setColumnLabel(9, "Was Sunnahs and Manners taught?"); // M
+      masterData.setColumnLabel(10, "Was Learning/Memorizing Dua conducted?"); // N
+      masterData.setColumnLabel(11, "Was Pious Deed Booklet filled with everyone?"); // O
 
-      let table = new google.visualization.Table(document.getElementById('table_div'));
-      table.draw(data, {showRowNumber: true, width: '100%', height: '100%'});
+      table = new google.visualization.Table(document.getElementById('table_div'));
 
-      populateFilters(allData);
+      // Build initial filter options from full dataset
+      refreshFilterOptions();
+      // Draw initial table (no filters)
+      drawFilteredView();
     }
 
-    function populateFilters(data) {
-      let months = new Set();
-      let dates = new Set();
-      let cities = new Set();
+    // Get formatted values safely (dates often need formattedValue)
+    function getVal(data, row, col) {
+      // Prefer formatted value for display columns (Month, Date)
+      return data.getFormattedValue(row, col) || data.getValue(row, col);
+    }
 
-      for (let i = 0; i < data.getNumberOfRows(); i++) {
-        months.add(data.getValue(i, 0)); // Column D
-        dates.add(data.getValue(i, 1));  // Column E
-        cities.add(data.getValue(i, 2)); // Column F
+    // Recompute dropdown options based on current selections (cascading)
+    function refreshFilterOptions() {
+      const months = new Set();
+      const dates  = new Set();
+      const cities = new Set();
+
+      // Build options constrained by current selections
+      for (let r = 0; r < masterData.getNumberOfRows(); r++) {
+        const m = getVal(masterData, r, 0); // Month & Year (D)
+        const d = getVal(masterData, r, 1); // Date (E) formatted
+        const c = getVal(masterData, r, 2); // City (F)
+
+        // Apply current selections to decide which values remain available
+        const monthMatches = !selections.month || m === selections.month;
+        const dateMatches  = !selections.date  || d === selections.date;
+        const cityMatches  = !selections.city  || c === selections.city;
+
+        // Only include values that could appear in a valid row under current selection
+        // For each dropdown, relax its own constraint to allow seeing alternatives.
+        if (dateMatches && cityMatches) months.add(m);
+        if (monthMatches && cityMatches) dates.add(d);
+        if (monthMatches && dateMatches) cities.add(c);
       }
 
-      let monthSelect = document.getElementById('monthFilter');
-      monthSelect.innerHTML = '<option value="">All Months</option>';
-      months.forEach(m => monthSelect.innerHTML += `<option value="${m}">${m}</option>`);
+      // Update Month dropdown
+      const monthSel = document.getElementById('monthFilter');
+      monthSel.innerHTML = '<option value="">All Months</option>';
+      [...months].sort().forEach(m => {
+        monthSel.innerHTML += `<option value="${escapeHtml(m)}"${selections.month === m ? ' selected' : ''}>${escapeHtml(m)}</option>`;
+      });
 
-      let dateSelect = document.getElementById('dateFilter');
-      dateSelect.innerHTML = '<option value="">All Dates</option>';
-      dates.forEach(d => dateSelect.innerHTML += `<option value="${d}">${d}</option>`);
+      // Update Date dropdown
+      const dateSel = document.getElementById('dateFilter');
+      dateSel.innerHTML = '<option value="">All Dates</option>';
+      [...dates].sort().forEach(d => {
+        dateSel.innerHTML += `<option value="${escapeHtml(d)}"${selections.date === d ? ' selected' : ''}>${escapeHtml(d)}</option>`;
+      });
 
-      let citySelect = document.getElementById('cityFilter');
-      citySelect.innerHTML = '<option value="">All Cities</option>';
-      cities.forEach(c => citySelect.innerHTML += `<option value="${c}">${c}</option>`);
+      // Update City dropdown
+      const citySel = document.getElementById('cityFilter');
+      citySel.innerHTML = '<option value="">All Cities</option>';
+      [...cities].sort().forEach(c => {
+        citySel.innerHTML += `<option value="${escapeHtml(c)}"${selections.city === c ? ' selected' : ''}>${escapeHtml(c)}</option>`;
+      });
+
+      // Auto-clear selections that are no longer valid
+      if (selections.month && !months.has(selections.month)) selections.month = '';
+      if (selections.date  && !dates.has(selections.date))   selections.date = '';
+      if (selections.city  && !cities.has(selections.city))   selections.city = '';
     }
 
-    function applyFilters() {
-      let month = document.getElementById('monthFilter').value;
-      let date = document.getElementById('dateFilter').value;
-      let city = document.getElementById('cityFilter').value;
-      loadData(month, date, city);
+    // Draw table using a DataView filtered client-side
+    function drawFilteredView() {
+      const view = new google.visualization.DataView(masterData);
+      const rows = [];
+
+      for (let r = 0; r < masterData.getNumberOfRows(); r++) {
+        const m = getVal(masterData, r, 0);
+        const d = getVal(masterData, r, 1);
+        const c = getVal(masterData, r, 2);
+
+        const match =
+          (!selections.month || m === selections.month) &&
+          (!selections.date  || d === selections.date)   &&
+          (!selections.city  || c === selections.city);
+
+        if (match) rows.push(r);
+      }
+
+      view.setRows(rows);
+      table.draw(view, {showRowNumber: true, width: '100%', height: '100%'});
+    }
+
+    // Handle selection changes
+    function onMonthChange() {
+      selections.month = document.getElementById('monthFilter').value;
+      // Recompute dependent options (dates, cities) under the selected month
+      refreshFilterOptions();
+      drawFilteredView();
+    }
+    function onDateChange() {
+      selections.date = document.getElementById('dateFilter').value;
+      refreshFilterOptions();
+      drawFilteredView();
+    }
+    function onCityChange() {
+      selections.city = document.getElementById('cityFilter').value;
+      refreshFilterOptions();
+      drawFilteredView();
     }
 
     function resetFilters() {
-      document.getElementById('monthFilter').value = '';
-      document.getElementById('dateFilter').value = '';
-      document.getElementById('cityFilter').value = '';
-      loadData();
+      selections.month = '';
+      selections.date  = '';
+      selections.city  = '';
+      refreshFilterOptions();
+      drawFilteredView();
+    }
+
+    // Minimal HTML escaping for option values/text
+    function escapeHtml(str) {
+      return String(str)
+        .replace(/&/g, "&amp;")
+        .replace(/</g, "&lt;")
+        .replace(/>/g, "&gt;")
+        .replace(/"/g, "&quot;")
+        .replace(/'/g, "&#039;");
     }
   </script>
 </head>
 <body>
-  <h2>Ijtima Performance Data (Month + Date + City Filters)</h2>
+  <h2>Ijtima Performance Data (Month → Date → City cascading filters)</h2>
 
-  <label for="monthFilter">Month & Year:</label>
-  <select id="monthFilter" onchange="applyFilters()"></select>
+  <div class="filters">
+    <div class="field">
+      <label for="monthFilter">Month & Year</label>
+      <select id="monthFilter" onchange="onMonthChange()"></select>
+    </div>
 
-  <label for="dateFilter">Date (Friday):</label>
-  <select id="dateFilter" onchange="applyFilters()"></select>
+    <div class="field">
+      <label for="dateFilter">Date (Friday)</label>
+      <select id="dateFilter" onchange="onDateChange()"></select>
+    </div>
 
-  <label for="cityFilter">City:</label>
-  <select id="cityFilter" onchange="applyFilters()"></select>
+    <div class="field">
+      <label for="cityFilter">City</label>
+      <select id="cityFilter" onchange="onCityChange()"></select>
+    </div>
 
-  <button onclick="resetFilters()">Reset Filters</button>
+    <div class="spacer"></div>
+    <button onclick="resetFilters()">Reset filters</button>
+  </div>
 
   <div id="table_div"></div>
 </body>
