@@ -207,21 +207,25 @@
   const dateSel = document.getElementById('dateFilter');
   dateSel.innerHTML = '<option value="">All Dates</option>';
   getAllDates().forEach(d => {
-    dateSel.innerHTML += `<option value="${d}"${selections.date === d ? ' selected' : ''}>${d}</option>`;
-  });
+  dateSel.innerHTML += `<option value="${d}"${selections.date === d ? ' selected' : ''}>${d}</option>`;
+});
 
   // City dropdown
-  const citySel = document.getElementById('cityFilter');
-  citySel.innerHTML = '<option value="">All Cities</option>';
-  if (selections.state && stateCityMap[selections.state]) {
-    stateCityMap[selections.state].forEach(c => {
+const citySel = document.getElementById('cityFilter');
+citySel.innerHTML = '<option value="">All Cities</option>';
+
+if (selections.state && stateCityMap[selections.state]) {
+  // If a state is locked or selected, show only its cities that match Year/Month
+  stateCityMap[selections.state].forEach(c => {
+    if (getAllCities().includes(c)) {
       citySel.innerHTML += `<option value="${escapeHtml(c)}"${selections.city === c ? ' selected' : ''}>${escapeHtml(c)}</option>`;
-    });
-  } else {
-    getAllCities().forEach(c => {
-      citySel.innerHTML += `<option value="${escapeHtml(c)}"${selections.city === c ? ' selected' : ''}>${escapeHtml(c)}</option>`;
-    });
-  }
+    }
+  });
+} else {
+  // Otherwise show all cities that match Year/Month
+  getAllCities().forEach(c => {
+    citySel.innerHTML += `<option value="${escapeHtml(c)}"${selections.city === c ? ' selected' : ''}>${escapeHtml(c)}</option>`;
+  });
 }
 
 function getAllYears() {
@@ -255,22 +259,49 @@ function getAllYears() {
 function getAllDates() {
   const allDates = new Set();
   for (let r = 0; r < masterData.getNumberOfRows(); r++) {
-    const d = getVal(masterData, r, 1); // column 1 = Date (Friday)
-    allDates.add(d);
+    const m = getVal(masterData, r, 0); // "Month & Year"
+    const d = getVal(masterData, r, 1); // Date (Friday)
+
+    if (d) {
+      // Only add dates that match the selected year and month (if any)
+      const yearMatch = m.match(/\b\d{4}\b/);
+      const year = yearMatch ? yearMatch[0] : '';
+
+      const matchesYear = !selections.year || (year && year === selections.year);
+      const matchesMonth = !selections.month || normalize(m) === normalize(selections.month);
+
+      if (matchesYear && matchesMonth) {
+        allDates.add(d);
+      }
+    }
   }
   return [...allDates].sort();
-}      
+}
       
      
 
 function getAllCities() {
   const allCities = new Set();
   for (let r = 0; r < masterData.getNumberOfRows(); r++) {
-    const c = getVal(masterData, r, 2); // column 2 = City
-    allCities.add(c);
+    const m = getVal(masterData, r, 0); // "Month & Year"
+    const d = getVal(masterData, r, 1); // Date (Friday)
+    const c = getVal(masterData, r, 2); // City
+
+    if (c) {
+      // Extract year from "Month & Year"
+      const yearMatch = m.match(/\b\d{4}\b/);
+      const year = yearMatch ? yearMatch[0] : '';
+
+      const matchesYear = !selections.year || (year && year === selections.year);
+      const matchesMonth = !selections.month || normalize(m) === normalize(selections.month);
+
+      if (matchesYear && matchesMonth) {
+        allCities.add(c);
+      }
+    }
   }
   return [...allCities].sort();
-}      
+}
 
 function drawFilteredView() {
   const view = new google.visualization.DataView(masterData);
