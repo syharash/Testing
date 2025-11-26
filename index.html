@@ -8,13 +8,68 @@
     h2 { margin-bottom: 12px; }
     .filters { display: flex; gap: 16px; flex-wrap: wrap; align-items: end; margin-bottom: 16px; }
     .field { display: flex; flex-direction: column; gap: 6px; }
-    select, button { padding: 6px 10px; }
+    select, button, input { padding: 6px 10px; }
     .spacer { flex: 1; }
+    #loginDiv { margin-bottom: 20px; }
   </style>
+
+  <!-- Firebase SDKs -->
+  <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-app.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-auth.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-firestore.js"></script>
+
+  <!-- Google Charts -->
   <script type="text/javascript" src="https://www.gstatic.com/charts/loader.js"></script>
-  <script type="text/javascript">
+</head>
+<body>
+  <h2>Ijtima Performance Data (Month → Date → State → City)</h2>
+
+  <!-- Login Form -->
+  <div id="loginDiv">
+    <h3>Login</h3>
+    <input type="email" id="email" placeholder="Email">
+    <input type="password" id="password" placeholder="Password">
+    <button id="loginBtn">Login</button>
+    <button id="logoutBtn">Logout</button>
+  </div>
+
+  <!-- Filters -->
+  <div class="filters">
+    <div class="field">
+      <label for="monthFilter">Month & Year</label>
+      <select id="monthFilter" onchange="onMonthChange()"></select>
+    </div>
+
+    <div class="field">
+      <label for="dateFilter">Date (Friday)</label>
+      <select id="dateFilter" onchange="onDateChange()"></select>
+    </div>
+
+    <div class="field">
+      <label for="stateFilter">State</label>
+      <select id="stateFilter" onchange="onStateChange()"></select>
+    </div>
+
+    <div class="field">
+      <label for="cityFilter">City</label>
+      <select id="cityFilter" onchange="onCityChange()"></select>
+    </div>
+
+    <div class="spacer"></div>
+    <button onclick="resetFilters()">Reset Filters</button>
+  </div>
+
+  <!-- Table container -->
+  <div id="table_div"></div>
+
+  <!-- Dashboard Logic -->
+  <script type="module">
+    import { login, logout, getUserState } from './auth.js';
+
     google.charts.load('current', {'packages':['table']});
     google.charts.setOnLoadCallback(init);
+
+
 
     // Replace with your actual Google Sheet ID
     const sheetUrl = 'https://docs.google.com/spreadsheets/d/11FCt-Uhffya434cBpGsNyotV1dUrMP_hkpeoLjYisdo/gviz/tq?sheet=Sheet1&headers=1';
@@ -34,10 +89,41 @@
       "Washington": ["Lynnwood, WA"]
     };
 
-    let masterData = null;
+ let masterData = null;
     let table = null;
     const selections = { month: '', date: '', state: '', city: '' };
 
+    // --- Login Button ---
+    document.getElementById('loginBtn').addEventListener('click', async () => {
+      const email = document.getElementById('email').value;
+      const password = document.getElementById('password').value;
+      try {
+        await login(email, password);
+        const assignedState = getUserState();
+        selections.state = assignedState;
+
+        const stateSel = document.getElementById('stateFilter');
+        stateSel.value = assignedState;
+        stateSel.disabled = true;
+
+        refreshFilterOptions();
+        drawFilteredView();
+      } catch (err) {
+        alert(err.message);
+      }
+    });
+
+    // --- Logout Button ---
+    document.getElementById('logoutBtn').addEventListener('click', async () => {
+      await logout();
+      selections.state = '';
+      const stateSel = document.getElementById('stateFilter');
+      stateSel.disabled = false;
+      refreshFilterOptions();
+      drawFilteredView();
+    });
+
+    // --- Dashboard Initialization ---
     function init() {
       const queryString = "SELECT D, E, F, G, H, I, J, K, L, M, N, O";
       const query = new google.visualization.Query(sheetUrl + "&tq=" + encodeURIComponent(queryString));
@@ -51,37 +137,26 @@
       }
       masterData = response.getDataTable();
 
-      // Label columns
-      masterData.setColumnLabel(0, "Month & Year"); // D
-      masterData.setColumnLabel(1, "Date (Friday)"); // E
-      masterData.setColumnLabel(2, "City"); // F
-      masterData.setColumnLabel(3, "Number of Participants"); // G
-      masterData.setColumnLabel(4, "Invitation through calls"); // H
-      masterData.setColumnLabel(5, "Intentions before Tilawat"); // I
-      masterData.setColumnLabel(6, "Intentions before Naat"); // J
-      masterData.setColumnLabel(7, "Duration of Bayan (minutes)"); // K
-      masterData.setColumnLabel(8, "Was Madani Halqa Conducted?"); // L
-      masterData.setColumnLabel(9, "Was Sunnahs and Manners taught?"); // M
-      masterData.setColumnLabel(10, "Was Learning/Memorizing Dua conducted?"); // N
-      masterData.setColumnLabel(11, "Was Pious Deed Booklet filled with everyone?"); // O
+      masterData.setColumnLabel(0, "Month & Year");
+      masterData.setColumnLabel(1, "Date (Friday)");
+      masterData.setColumnLabel(2, "City");
+      masterData.setColumnLabel(3, "Number of Participants");
+      masterData.setColumnLabel(4, "Invitation through calls");
+      masterData.setColumnLabel(5, "Intentions before Tilawat");
+      masterData.setColumnLabel(6, "Intentions before Naat");
+      masterData.setColumnLabel(7, "Duration of Bayan (minutes)");
+      masterData.setColumnLabel(8, "Was Madani Halqa Conducted?");
+      masterData.setColumnLabel(9, "Was Sunnahs and Manners taught?");
+      masterData.setColumnLabel(10, "Was Learning/Memorizing Dua conducted?");
+      masterData.setColumnLabel(11, "Was Pious Deed Booklet filled with everyone?");
 
       table = new google.visualization.Table(document.getElementById('table_div'));
-
-      populateStateFilter();
       refreshFilterOptions();
       drawFilteredView();
     }
 
     function getVal(data, row, col) {
       return data.getFormattedValue(row, col) || data.getValue(row, col);
-    }
-
-    function populateStateFilter() {
-      const stateSel = document.getElementById('stateFilter');
-      stateSel.innerHTML = '<option value="">All States</option>';
-      Object.keys(stateCityMap).forEach(state => {
-        stateSel.innerHTML += `<option value="${state}">${state}</option>`;
-      });
     }
 
     function refreshFilterOptions() {
@@ -107,7 +182,8 @@
         }
       }
 
-      const monthSel = document.getElementById('monthFilter');
+
+     const monthSel = document.getElementById('monthFilter');
       monthSel.innerHTML = '<option value="">All Months</option>';
       [...months].sort().forEach(m => {
         monthSel.innerHTML += `<option value="${m}"${selections.month === m ? ' selected' : ''}>${m}</option>`;
