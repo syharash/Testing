@@ -182,11 +182,7 @@
     }
 
     function refreshFilterOptions() {
-      const months = new Set();
-      const dates = new Set();
-      const cities = new Set();
-
-      for (let r = 0; r < masterData.getNumberOfRows(); r++) {
+     for (let r = 0; r < masterData.getNumberOfRows(); r++) {
         const m = getVal(masterData, r, 0);
         const d = getVal(masterData, r, 1);
         const c = getVal(masterData, r, 2);
