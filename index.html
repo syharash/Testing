@@ -31,27 +31,27 @@
   <div id="dashboardDiv" style="display:none;">
     <button id="logoutBtn">Logout</button>
     <div class="filters">
-      <div class="field">
-        <label for="monthFilter">Month & Year</label>
-        <select id="monthFilter" onchange="onMonthChange()"></select>
-      </div>
+     <div class="field">
+      <label for="monthFilter">Month & Year</label>
+      <select id="monthFilter"></select>
+    </div>
 
-      <div class="field">
-        <label for="dateFilter">Date (Friday)</label>
-        <select id="dateFilter" onchange="onDateChange()"></select>
-      </div>
+    <div class="field">
+      <label for="dateFilter">Date (Friday)</label>
+      <select id="dateFilter"></select>
+    </div>
 
-      <div class="field">
-        <label for="stateFilter">State</label>
-        <select id="stateFilter" onchange="onStateChange()"></select>
-      </div>
+    <div class="field">
+      <label for="stateFilter">State</label>
+      <select id="stateFilter"></select>
+    </div>
 
-      <div class="field">
-        <label for="cityFilter">City</label>
-        <select id="cityFilter" onchange="onCityChange()"></select>
-      </div>
+    <div class="field">
+      <label for="cityFilter">City</label>
+      <select id="cityFilter"></select>
+    </div>
 
-      <div class="spacer"></div>
+    <div class="spacer"></div>
       <button onclick="resetFilters()">Reset Filters</button>
     </div>
 
@@ -65,6 +65,10 @@
 
     google.charts.load('current', {'packages':['table']});
     google.charts.setOnLoadCallback(init);
+    document.getElementById('monthFilter').addEventListener('change', onMonthChange);
+    document.getElementById('dateFilter').addEventListener('change', onDateChange);
+    document.getElementById('stateFilter').addEventListener('change', onStateChange);
+    document.getElementById('cityFilter').addEventListener('change', onCityChange);
 
     const sheetUrl = 'https://docs.google.com/spreadsheets/d/11FCt-Uhffya434cBpGsNyotV1dUrMP_hkpeoLjYisdo/gviz/tq?sheet=Sheet1&headers=1';
 
