@@ -21,22 +21,15 @@
 
   <!-- Login Form -->
   <div id="loginDiv">
-  <h3>Login</h3>
-  <input type="email" id="email" placeholder="Email">
-  <input type="password" id="password" placeholder="Password">
-  <button id="loginBtn">Login</button>
-</div>
-
-<div id="dashboardDiv" style="display:none;">
-  <button id="logoutBtn">Logout</button> <!-- ✅ moved here -->
-  <div class="filters">
-    <!-- filters remain unchanged -->
+    <h3>Login</h3>
+    <input type="email" id="email" placeholder="Email">
+    <input type="password" id="password" placeholder="Password">
+    <button id="loginBtn">Login</button>
   </div>
-  <div id="table_div"></div>
-</div>
 
   <!-- Dashboard (hidden until login) -->
   <div id="dashboardDiv" style="display:none;">
+    <button id="logoutBtn">Logout</button>
     <div class="filters">
       <div class="field">
         <label for="monthFilter">Month & Year</label>
@@ -66,7 +59,7 @@
     <div id="table_div"></div>
   </div>
 
-  <!-- Dashboard Logic -->
+ <!-- Dashboard Logic -->
   <script type="module">
     import { login, logout, getUserState } from './auth.js';
 
@@ -135,7 +128,6 @@
       resetFilters();
     });
 
-
     // --- Dashboard Initialization ---
     function init() {
       const queryString = "SELECT D, E, F, G, H, I, J, K, L, M, N, O";
@@ -181,6 +173,10 @@
       });
     }
 
+    function normalize(val) {
+      return val ? val.toString().trim().toLowerCase() : '';
+    }
+
     function refreshFilterOptions() {
       const months = new Set();
       const dates = new Set();
@@ -191,15 +187,11 @@
         const d = getVal(masterData, r, 1);
         const c = getVal(masterData, r, 2);
 
-   function normalize(val) {
-    return val ? val.toString().trim().toLowerCase() : '';
-  }  
-
-const match =
-  (!selections.month || normalize(m) === normalize(selections.month)) &&
-  (!selections.date  || normalize(d) === normalize(selections.date)) &&
-  (!selections.state || (stateCityMap[selections.state] && stateCityMap[selections.state].includes(c))) &&
-  (!selections.city  || normalize(c) === normalize(selections.city));
+        const match =
+          (!selections.month || normalize(m) === normalize(selections.month)) &&
+          (!selections.date  || normalize(d) === normalize(selections.date)) &&
+          (!selections.state || (stateCityMap[selections.state] && stateCityMap[selections.state].includes(c))) &&
+          (!selections.city  || normalize(c) === normalize(selections.city));
 
         if (match) {
           months.add(m);
