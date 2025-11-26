@@ -25,7 +25,7 @@
     <input type="email" id="email" placeholder="Email">
     <input type="password" id="password" placeholder="Password">
     <button id="loginBtn">Login</button>
-    <button id="logoutBtn">Logout</button>
+//  <button id="logoutBtn">Logout</button>
   </div>
 
   <!-- Dashboard (hidden until login) -->
@@ -93,11 +93,15 @@
       try {
         await login(email, password);
         const assignedState = getUserState();
-        selections.state = assignedState;
 
         const stateSel = document.getElementById('stateFilter');
-        stateSel.value = assignedState;
-        stateSel.disabled = true;
+        if (assignedState) {
+          selections.state = assignedState;
+          stateSel.value = assignedState;
+          stateSel.disabled = true;
+        } else {
+          alert("No assignedState found in profile");
+        }
 
         document.getElementById('loginDiv').style.display = "none";
         document.getElementById('dashboardDiv').style.display = "block";
@@ -123,6 +127,7 @@
 
       resetFilters();
     });
+
 
     // --- Dashboard Initialization ---
     function init() {
