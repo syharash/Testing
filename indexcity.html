@@ -121,12 +121,15 @@
 
       const citySel = document.getElementById('cityFilter');
       citySel.innerHTML = '<option value="">All Cities</option>';
-      let allowedCities = selections.state ? stateCityMap[selections.state] || [] : [...cities];
-      allowedCities.forEach(c => {
-        if (cities.has(c)) {
-          citySel.innerHTML += `<option value="${c}"${selections.city === c ? ' selected' : ''}>${c}</option>`;
-        }
-      });
+     if (selections.state && stateCityMap[selections.state]) {
+  stateCityMap[selections.state].forEach(c => {
+    citySel.innerHTML += `<option value="${c}"${selections.city === c ? ' selected' : ''}>${c}</option>`;
+  });
+} else {
+  [...cities].sort().forEach(c => {
+    citySel.innerHTML += `<option value="${c}"${selections.city === c ? ' selected' : ''}>${c}</option>`;
+  });
+}
     }
 
     function drawFilteredView() {
