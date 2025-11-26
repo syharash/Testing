@@ -4,52 +4,42 @@ import { initializeApp } from "https://www.gstatic.com/firebasejs/9.6.1/firebase
 import { getAuth, signInWithEmailAndPassword, signOut } from "https://www.gstatic.com/firebasejs/9.6.1/firebase-auth.js";
 import { getFirestore, doc, getDoc } from "https://www.gstatic.com/firebasejs/9.6.1/firebase-firestore.js";
 
-const firebaseConfig = { /* your config */ };
-const app = initializeApp(firebaseConfig);
-const auth = getAuth(app);
-const db = getFirestore(app);
+// If you want Analytics, import it too:
+// import { getAnalytics } from "https://www.gstatic.com/firebasejs/9.6.1/firebase-analytics.js";
 
-// Your web app's Firebase configuration
-// For Firebase JS SDK v7.20.0 and later, measurementId is optional
+// --- Firebase Config ---
 const firebaseConfig = {
   apiKey: "AIzaSyB4kSCgdJLSCFMUdEyqT_I9xgrEFNnPulQ",
   authDomain: "ijtima-ae364.firebaseapp.com",
   projectId: "ijtima-ae364",
-  storageBucket: "ijtima-ae364.firebasestorage.app",
+  storageBucket: "ijtima-ae364.appspot.com",   // corrected: should end with .appspot.com
   messagingSenderId: "843664116262",
   appId: "1:843664116262:web:b6144381ce4b92934374e7",
   measurementId: "G-HGZZGTGFZN"
 };
 
-// Initialize Firebase
-const app = initializeApp(firebaseConfig);
-const analytics = getAnalytics(app);
-};
-
+// --- Initialize Firebase ---
 const app = initializeApp(firebaseConfig);
 const auth = getAuth(app);
 const db = getFirestore(app);
+// const analytics = getAnalytics(app); // optional, only if you need Analytics
 
 let currentUserProfile = null;
 
 // --- Login Function ---
 export async function login(email, password) {
-  try {
-    const userCredential = await signInWithEmailAndPassword(auth, email, password);
-    const uid = userCredential.user.uid;
+  const userCredential = await signInWithEmailAndPassword(auth, email, password);
+  const uid = userCredential.user.uid;
 
-    // Fetch user profile from Firestore
-    const docRef = doc(db, "users", uid);
-    const docSnap = await getDoc(docRef);
+  // Fetch user profile from Firestore
+  const docRef = doc(db, "users", uid);
+  const docSnap = await getDoc(docRef);
 
-    if (docSnap.exists()) {
-      currentUserProfile = docSnap.data();
-      return currentUserProfile;
-    } else {
-      throw new Error("No profile found for this user.");
-    }
-  } catch (err) {
-    throw err;
+  if (docSnap.exists()) {
+    currentUserProfile = docSnap.data();
+    return currentUserProfile;
+  } else {
+    throw new Error("No profile found for this user.");
   }
 }
 
