@@ -21,11 +21,19 @@
 
   <!-- Login Form -->
   <div id="loginDiv">
-    <h3>Login</h3>
-    <input type="email" id="email" placeholder="Email">
-    <input type="password" id="password" placeholder="Password">
-    <button id="loginBtn">Login</button>
+  <h3>Login</h3>
+  <input type="email" id="email" placeholder="Email">
+  <input type="password" id="password" placeholder="Password">
+  <button id="loginBtn">Login</button>
+</div>
+
+<div id="dashboardDiv" style="display:none;">
+  <button id="logoutBtn">Logout</button> <!-- ✅ moved here -->
+  <div class="filters">
+    <!-- filters remain unchanged -->
   </div>
+  <div id="table_div"></div>
+</div>
 
   <!-- Dashboard (hidden until login) -->
   <div id="dashboardDiv" style="display:none;">
@@ -183,11 +191,15 @@
         const d = getVal(masterData, r, 1);
         const c = getVal(masterData, r, 2);
 
-        const match =
-          (!selections.month || m === selections.month) &&
-          (!selections.date  || d === selections.date) &&
-          (!selections.state || (stateCityMap[selections.state] && stateCityMap[selections.state].includes(c))) &&
-          (!selections.city  || c === selections.city);
+   function normalize(val) {
+    return val ? val.toString().trim().toLowerCase() : '';
+  }  
+
+const match =
+  (!selections.month || normalize(m) === normalize(selections.month)) &&
+  (!selections.date  || normalize(d) === normalize(selections.date)) &&
+  (!selections.state || (stateCityMap[selections.state] && stateCityMap[selections.state].includes(c))) &&
+  (!selections.city  || normalize(c) === normalize(selections.city));
 
         if (match) {
           months.add(m);
