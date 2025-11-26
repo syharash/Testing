@@ -203,7 +203,34 @@
           cities.add(c);
         }
       }
+      
+      const monthSel = document.getElementById('monthFilter');
+      monthSel.innerHTML = '<option value="">All Months</option>';
+      getAllMonths().forEach(m => {
+      monthSel.innerHTML += `<option value="${m}"${selections.month === m ? ' selected' : ''}>${m}</option>`;
+      });
 
+      const dateSel = document.getElementById('dateFilter');
+      dateSel.innerHTML = '<option value="">All Dates</option>';
+      getAllDates().forEach(d => {
+      dateSel.innerHTML += `<option value="${d}"${selections.date === d ? ' selected' : ''}>${d}</option>`;
+      });
+
+     const citySel = document.getElementById('cityFilter');
+     citySel.innerHTML = '<option value="">All Cities</option>';
+
+    if (selections.state && stateCityMap[selections.state]) {
+    // If a state is locked or selected, show only its cities
+    stateCityMap[selections.state].forEach(c => {
+    citySel.innerHTML += `<option value="${escapeHtml(c)}"${selections.city === c ? ' selected' : ''}>${escapeHtml(c)}</option>`;
+    });
+  } else {
+  // Otherwise show all cities from the sheet
+    getAllCities().forEach(c => {
+    citySel.innerHTML += `<option value="${escapeHtml(c)}"${selections.city === c ? ' selected' : ''}>${escapeHtml(c)}</option>`;
+  });
+  }
+}
   function getAllMonths() {
     const allMonths = new Set();
     for (let r = 0; r < masterData.getNumberOfRows(); r++) {
@@ -212,11 +239,7 @@
     }
   return [...allMonths].sort();
 }
-     const monthSel = document.getElementById('monthFilter');
-      monthSel.innerHTML = '<option value="">All Months</option>';
-      getAllMonths().forEach(m => {
-      monthSel.innerHTML += `<option value="${m}"${selections.month === m ? ' selected' : ''}>${m}</option>`;
-      });
+     
 
 function getAllDates() {
   const allDates = new Set();
@@ -227,11 +250,7 @@ function getAllDates() {
   return [...allDates].sort();
 }      
       
-      const dateSel = document.getElementById('dateFilter');
-      dateSel.innerHTML = '<option value="">All Dates</option>';
-      getAllDates().forEach(d => {
-      dateSel.innerHTML += `<option value="${d}"${selections.date === d ? ' selected' : ''}>${d}</option>`;
-      });
+     
 
 function getAllCities() {
   const allCities = new Set();
@@ -241,37 +260,22 @@ function getAllCities() {
   }
   return [...allCities].sort();
 }      
-  const citySel = document.getElementById('cityFilter');
-  citySel.innerHTML = '<option value="">All Cities</option>';
 
-  if (selections.state && stateCityMap[selections.state]) {
-  // If a state is locked or selected, show only its cities
-    stateCityMap[selections.state].forEach(c => {
-    citySel.innerHTML += `<option value="${escapeHtml(c)}"${selections.city === c ? ' selected' : ''}>${escapeHtml(c)}</option>`;
-  });
-  } else {
-  // Otherwise show all cities from the sheet
-    getAllCities().forEach(c => {
-    citySel.innerHTML += `<option value="${escapeHtml(c)}"${selections.city === c ? ' selected' : ''}>${escapeHtml(c)}</option>`;
-  });
-}
+function drawFilteredView() {
+  const view = new google.visualization.DataView(masterData);
+  const rows = [];
 
-    function drawFilteredView() {
-      const view = new google.visualization.DataView(masterData);
-      const rows = [];
-
-      for (let r = 0; r < masterData.getNumberOfRows(); r++) {
+  for (let r = 0; r < masterData.getNumberOfRows(); r++) {
         const m = getVal(masterData, r, 0);
         const d = getVal(masterData, r, 1);
         const c = getVal(masterData, r, 2);
 
-        const match =
-          (!selections.month || normalize(m) === normalize(selections.month)) &&
-          (!selections.date  || normalize(d) === normalize(selections.date)) &&
-          (!selections.state || (stateCityMap[selections.state] && stateCityMap[selections.state].includes(c))) &&
-          (!selections.city  || normalize(c) === normalize(selections.city));
-
-        if (match) rows.push(r);
+  const match =
+      (!selections.month || normalize(m) === normalize(selections.month)) &&
+      (!selections.date  || normalize(d) === normalize(selections.date)) &&
+      (!selections.state || (stateCityMap[selections.state] && stateCityMap[selections.state].includes(c))) &&
+      (!selections.city  || normalize(c) === normalize(selections.city));
+      if (match) rows.push(r);
       }
 
       view.setRows(rows);
