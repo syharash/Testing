@@ -110,50 +110,44 @@ document.getElementById('loginBtn').addEventListener('click', async () => {
 
   try {
     await login(email, password);
-    let rawStates = getUserState(); // could be "California" or "[California, Texas]"
-let assignedStates = [];
+    let rawStates = getUserState();
+    let assignedStates = [];
 
-try {
-  const parsed = JSON.parse(rawStates);
-  assignedStates = Array.isArray(parsed) ? parsed : [parsed];
-} catch {
-  // Handle legacy "[Maryland, Virginia]" format
-  if (typeof rawStates === "string" && rawStates.startsWith("[")) {
-    assignedStates = rawStates.replace(/^\[|\]$/g, "").split(",").map(s => s.trim());
-  } else {
-    assignedStates = rawStates ? [rawStates] : [];
+    try {
+      const parsed = JSON.parse(rawStates);
+      assignedStates = Array.isArray(parsed) ? parsed : [parsed];
+    } catch {
+      if (typeof rawStates === "string" && rawStates.startsWith("[")) {
+        assignedStates = rawStates.replace(/^\[|\]$/g, "").split(",").map(s => s.trim());
+      } else {
+        assignedStates = rawStates ? [rawStates] : [];
+      }
+    }
+
+    const stateSel = document.getElementById('stateFilter');
+    if (assignedStates.length > 0) {
+      selections.states = assignedStates;
+      stateSel.innerHTML = '<option value="">All States</option>';
+      assignedStates.forEach(st => {
+        stateSel.innerHTML += `<option value="${st}">${st}</option>`;
+      });
+      stateSel.disabled = true;
+    } else {
+      alert("No assignedStates found in profile");
+    }
+
+    document.getElementById('loginDiv').style.display = "none";
+    document.getElementById('dashboardDiv').style.display = "block";
+
+    refreshFilterOptions();
+    drawFilteredView();
+
+  } catch (err) {
+    alert(err.message);
   }
-}
+});   // <-- this closes the login handler properly
 
-const stateSel = document.getElementById('stateFilter');
-if (assignedStates.length > 0) {
-  selections.states = assignedStates; // <-- use plural here
-
-  stateSel.innerHTML = '<option value="">All States</option>';
-  assignedStates.forEach(st => {
-    stateSel.innerHTML += `<option value="${st}">${st}</option>`;
-  });
-
-  stateSel.disabled = true;
-} else {
-  alert("No assignedStates found in profile");
-  }
-});
-    // --- Logout Button ---
-    document.getElementById('logoutBtn').addEventListener('click', async () => {
-      await logout();
-      selections.states = [];
-      selections.city = '';
-      const stateSel = document.getElementById('stateFilter');
-      stateSel.disabled = false;
-      stateSel.value = '';
-
-      document.getElementById('loginDiv').style.display = "block";
-      document.getElementById('dashboardDiv').style.display = "none";
-
-      resetFilters();
-    });
-
+    
     // --- Dashboard Initialization ---
     function init() {
       const queryString = "SELECT D, E, F, G, H, I, J, K, L, M, N, O";
