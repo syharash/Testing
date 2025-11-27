@@ -111,27 +111,27 @@ document.getElementById('loginBtn').addEventListener('click', async () => {
   try {
     await login(email, password);
     let rawStates = getUserState(); // could be "California" or "[California, Texas]"
-    let assignedStates = [];
+    let assignedState = [];
 
     try {
       const parsed = JSON.parse(rawStates);
-      assignedStates = Array.isArray(parsed) ? parsed : [parsed];
+      assignedState = Array.isArray(parsed) ? parsed : [parsed];
     } catch {
-      assignedStates = rawStates ? [rawStates] : [];
+      assignedState = rawStates ? [rawStates] : [];
     }
 
     const stateSel = document.getElementById('stateFilter');
-    if (assignedStates.length > 0) {
-      selections.states = assignedStates;
+    if (assignedState.length > 0) {
+      selections.state = assignedState;
 
       stateSel.innerHTML = '<option value="">All States</option>';
-      assignedStates.forEach(st => {
+      assignedState.forEach(st => {
         stateSel.innerHTML += `<option value="${st}">${st}</option>`;
       });
 
       stateSel.disabled = true;
     } else {
-      alert("No assignedStates found in profile");
+      alert("No assignedState(s) found in profile");
     }
 
     document.getElementById('loginDiv').style.display = "none";
