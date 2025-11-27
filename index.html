@@ -330,13 +330,17 @@ function refreshFilterOptions() {
     dateSel.innerHTML += `<option value="${d}"${selections.date === d ? ' selected' : ''}>${d}</option>`;
   });
 
-  // City dropdown
+  // City dropdown (multi‑state aware)
   const citySel = document.getElementById('cityFilter');
   citySel.innerHTML = '<option value="">All Cities</option>';
-  if (selections.state && stateCityMap[selections.state]) {
-    stateCityMap[selections.state].forEach(c => {
-      if (cachedFilters.cities.includes(c)) {
-        citySel.innerHTML += `<option value="${escapeHtml(c)}"${selections.city === c ? ' selected' : ''}>${escapeHtml(c)}</option>`;
+  if (selections.states.length > 0) {
+    selections.states.forEach(st => {
+      if (stateCityMap[st]) {
+        stateCityMap[st].forEach(c => {
+          if (cachedFilters.cities.includes(c)) {
+            citySel.innerHTML += `<option value="${escapeHtml(c)}"${selections.city === c ? ' selected' : ''}>${escapeHtml(c)}</option>`;
+          }
+        });
       }
     });
   } else {
@@ -346,28 +350,29 @@ function refreshFilterOptions() {
   }
 }
 
+// --- Draw filtered view ---
 function drawFilteredView() {
   const view = new google.visualization.DataView(masterData);
   const rows = [];
 
   for (let r = 0; r < masterData.getNumberOfRows(); r++) {
-        const m = getVal(masterData, r, 0);
-        const d = getVal(masterData, r, 1);
-        const c = getVal(masterData, r, 2);
+    const m = getVal(masterData, r, 0); // Month & Year
+    const d = getVal(masterData, r, 1); // Date (Friday)
+    const c = getVal(masterData, r, 2); // City
 
-      const match =
-        (!selections.year || m.includes(selections.year)) &&
-        (!selections.month || normalize(m) === normalize(selections.month)) &&
-        (!selections.date  || normalize(d) === normalize(selections.date)) &&
-        (!selections.states.length || selections.states.some(st => stateCityMap[st] && stateCityMap[st].includes(c)))
-        (!selections.city  || normalize(c) === normalize(selections.city));
-    
-      if (match) rows.push(r);
-      }
+    const match =
+      (!selections.year || m.includes(selections.year)) &&
+      (!selections.month || normalize(m) === normalize(selections.month)) &&
+      (!selections.date || normalize(d) === normalize(selections.date)) &&
+      (!selections.states.length || selections.states.some(st => stateCityMap[st] && stateCityMap[st].includes(c))) &&
+      (!selections.city || normalize(c) === normalize(selections.city));
 
-      view.setRows(rows);
-      table.draw(view, {showRowNumber: true, width: '100%', height: '100%'});
-    }
+    if (match) rows.push(r);
+  }
+
+  view.setRows(rows);
+  table.draw(view, { showRowNumber: true, width: '100%', height: '100%' });
+}
 
     function onYearChange() {
       selections.year = document.getElementById('yearFilter').value;
