@@ -142,7 +142,7 @@ if (assignedStates.length > 0) {
     // --- Logout Button ---
     document.getElementById('logoutBtn').addEventListener('click', async () => {
       await logout();
-      selections.state = '';
+      selections.states = '';
       selections.city = '';
       const stateSel = document.getElementById('stateFilter');
       stateSel.disabled = false;
@@ -393,7 +393,7 @@ function drawFilteredView() {
     }
 
     function onStateChange() {
-      selections.state = document.getElementById('stateFilter').value;
+      selections.states = document.getElementById('stateFilter').value;
       selections.city = ''; // reset city when state changes
       refreshFilterOptions();
       drawFilteredView();
@@ -410,7 +410,7 @@ function drawFilteredView() {
       selections.date = '';
       // Keep state locked if logged in; otherwise clear
       const stateSel = document.getElementById('stateFilter');
-      if (!stateSel.disabled) selections.state = '';
+      if (!stateSel.disabled) selections.states = '';
       selections.city = '';
 
       refreshFilterOptions();
