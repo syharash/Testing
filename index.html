@@ -148,21 +148,33 @@ document.getElementById('loginBtn').addEventListener('click', async () => {
   }
 });
 
-    // --- Logout Button ---
-    document.getElementById('logoutBtn').addEventListener('click', async () => {
-      await logout();
-      selections.states = [];
-      selections.city = '';
-      const stateSel = document.getElementById('stateFilter');
-      stateSel.disabled = false;
-      stateSel.value = '';
+// --- Logout Button ---
+document.getElementById('logoutBtn').addEventListener('click', async () => {
+  await logout();
 
-      document.getElementById('loginDiv').style.display = "block";
-      document.getElementById('dashboardDiv').style.display = "none";
+  // Clear selections
+  selections.states = [];
+  selections.city = '';
+  selections.month = '';
+  selections.date = '';
+  selections.year = '';
 
-      resetFilters();
-    });
+  // Reset state dropdown
+  const stateSel = document.getElementById('stateFilter');
+  stateSel.disabled = false;   // always re‑enable on logout
+  stateSel.value = '';
+  stateSel.innerHTML = '<option value="">All States</option>';
+  Object.keys(stateCityMap).forEach(state => {
+    stateSel.innerHTML += `<option value="${state}">${state}</option>`;
+  });
 
+  // Hide dashboard, show login
+  document.getElementById('loginDiv').style.display = "block";
+  document.getElementById('dashboardDiv').style.display = "none";
+
+  // Reset filters and redraw
+  resetFilters();
+});
     // --- Dashboard Initialization ---
     function init() {
       const queryString = "SELECT D, E, F, G, H, I, J, K, L, M, N, O";
