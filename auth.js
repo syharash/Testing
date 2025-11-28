@@ -49,32 +49,29 @@ export async function logout() {
   currentUserProfile = null;
 }
 
-// --- Get Assigned States (always returns an array) ---
+// --- Get Assigned States (always returns normalized array) ---
 export function getUserStates() {
   if (!currentUserProfile) return [];
 
   const raw = currentUserProfile.assignedStates || currentUserProfile.assignedState;
+  let states = [];
 
   if (Array.isArray(raw)) {
-    return raw;
-  }
-
-  if (typeof raw === "string") {
-    // Try to parse JSON string
+    states = raw;
+  } else if (typeof raw === "string") {
     try {
       const parsed = JSON.parse(raw);
-      return Array.isArray(parsed) ? parsed : [parsed];
+      states = Array.isArray(parsed) ? parsed : [parsed];
     } catch {
       // Handle legacy "[Maryland, Virginia]" format
-      if (raw.startsWith("[") && raw.endsWith("]")) {
-        return raw.replace(/^\[|\]$/g, "").split(",").map(s => s.trim());
-      }
-      return [raw];
+      states = raw.replace(/^\[|\]$/g, "").split(",").map(s => s.trim());
     }
   }
 
-  return [];
+  // Normalize: trim + lowercase
+  return states.map(s => s.toString().trim().toLowerCase()).filter(Boolean);
 }
+
 // --- Get Current Profile ---
 export function getUserProfile() {
   return currentUserProfile;
