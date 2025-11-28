@@ -147,6 +147,20 @@ document.getElementById('loginBtn').addEventListener('click', async () => {
   }
 });   // <-- this closes the login handler properly
 
+// --- Logout Button ---
+document.getElementById('logoutBtn').addEventListener('click', async () => {
+  await logout();
+  selections.states = [];   // clear array properly
+  selections.city = '';
+  const stateSel = document.getElementById('stateFilter');
+  stateSel.disabled = false;
+  stateSel.value = '';
+
+  document.getElementById('loginDiv').style.display = "block";
+  document.getElementById('dashboardDiv').style.display = "none";
+
+  resetFilters();
+});
     
     // --- Dashboard Initialization ---
     function init() {
@@ -197,7 +211,7 @@ document.getElementById('loginBtn').addEventListener('click', async () => {
       return val ? val.toString().trim().toLowerCase() : '';
     }
 
-    function buildFilterCache() {
+  function buildFilterCache() {
   const years = new Set();
   const months = new Set();
   const dates = new Set();
