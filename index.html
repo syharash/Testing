@@ -103,42 +103,50 @@
     let table = null;
     const selections = { month: '', date: '', states: [], city: '', year: '' };
 
-    // --- Login Button ---
-    document.getElementById('loginBtn').addEventListener('click', async () => {
-      const email = document.getElementById('email').value;
-      const password = document.getElementById('password').value;
+// --- Login Button ---
+document.getElementById('loginBtn').addEventListener('click', async () => {
+  const email = document.getElementById('email').value;
+  const password = document.getElementById('password').value;
 
-      try {
-        await login(email, password);
+  try {
+    await login(email, password);
 
-        const cleanStates = Array.from(new Set(getUserStates().map(s => s.toLowerCase().trim()).filter(Boolean)));
+    // Normalize states returned from auth.js
+    const cleanStates = Array.from(
+      new Set(getUserStates().map(s => s.toLowerCase().trim()).filter(Boolean))
+    );
 
-        const stateSel = document.getElementById('stateFilter');
-        if (cleanStates.length > 0) {
-          selections.states = cleanStates;
+    const stateSel = document.getElementById('stateFilter');
+    if (cleanStates.length > 0) {
+      selections.states = cleanStates;
 
-          stateSel.innerHTML = '<option value="">All States</option>';
-          cleanStates.forEach(st => {
-            // Show pretty label from original map keys
-            const pretty = Object.keys(stateCityMap).find(k => k.toLowerCase().trim() === st) || st;
-            stateSel.innerHTML += `<option value="${pretty}">${pretty}</option>`;
-          });
+      // Populate dropdown with assigned states
+      stateSel.innerHTML = '<option value="">All States</option>';
+      cleanStates.forEach(st => {
+        // Find pretty label from original map keys
+        const pretty = Object.keys(stateCityMap).find(
+          k => k.toLowerCase().trim() === st
+        ) || st;
+        stateSel.innerHTML += `<option value="${pretty}">${pretty}</option>`;
+      });
 
-          stateSel.disabled = true;
-        } else {
-          alert("No assignedStates found in profile");
-        }
+      // Disable only if exactly one state is assigned
+      stateSel.disabled = (cleanStates.length === 1);
+    } else {
+      alert("No assignedStates found in profile");
+    }
 
-        document.getElementById('loginDiv').style.display = "none";
-        document.getElementById('dashboardDiv').style.display = "block";
+    // Show dashboard
+    document.getElementById('loginDiv').style.display = "none";
+    document.getElementById('dashboardDiv').style.display = "block";
 
-        refreshFilterOptions();
-        drawFilteredView();
+    refreshFilterOptions();
+    drawFilteredView();
 
-      } catch (err) {
-        alert(err.message);
-      }
-    });
+  } catch (err) {
+    alert(err.message);
+  }
+});
 
     // --- Logout Button ---
     document.getElementById('logoutBtn').addEventListener('click', async () => {
