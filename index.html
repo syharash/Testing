@@ -314,6 +314,24 @@ function refreshFilterOptions() {
 }
 
 // --- Draw filtered view ---
+// --- Helper: calculate column widths based on content ---
+function getColumnWidths(dataView) {
+  const widths = [];
+  for (let col = 0; col < dataView.getNumberOfColumns(); col++) {
+    let maxLen = dataView.getColumnLabel(col).length;
+    for (let row = 0; row < dataView.getNumberOfRows(); row++) {
+      const val = dataView.getFormattedValue(row, col) || dataView.getValue(row, col);
+      if (val && val.toString().length > maxLen) {
+        maxLen = val.toString().length;
+      }
+    }
+    // Roughly 8px per character, capped at 300px
+    widths.push(Math.min(maxLen * 8, 300));
+  }
+  return widths;
+}
+
+// --- Draw filtered view with auto column widths ---
 function drawFilteredView() {
   const view = new google.visualization.DataView(masterData);
   const rows = [];
@@ -336,7 +354,16 @@ function drawFilteredView() {
   }
 
   view.setRows(rows);
-  table.draw(view, { showRowNumber: true, width: '100%', height: '100%' });
+
+  // Calculate widths dynamically
+  const colWidths = getColumnWidths(view);
+
+  table.draw(view, {
+    showRowNumber: true,
+    width: '100%',
+    height: '100%',
+    columns: colWidths.map(w => ({ width: w }))
+  });
 }
 
 // --- Event handlers ---
