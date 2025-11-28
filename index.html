@@ -67,7 +67,7 @@
 
  <!-- Dashboard Logic -->
   <script type="module">
-    import { login, logout, getUserState } from './auth.js';
+    import { login, logout, getUserStates } from './auth.js';
 
     google.charts.load('current', {'packages':['table']});
     google.charts.setOnLoadCallback(init);
@@ -110,28 +110,20 @@ document.getElementById('loginBtn').addEventListener('click', async () => {
 
   try {
     await login(email, password);
-    let rawStates = getUserState();
-    let assignedStates = [];
 
-    try {
-      const parsed = JSON.parse(rawStates);
-      assignedStates = Array.isArray(parsed) ? parsed : [parsed];
-    } catch {
-      if (typeof rawStates === "string" && rawStates.startsWith("[")) {
-        assignedStates = rawStates.replace(/^\[|\]$/g, "").split(",").map(s => s.trim());
-      } else {
-        assignedStates = rawStates ? [rawStates] : [];
-      }
-    }
+    // Always returns an array from auth.js
+    const assignedStates = getUserStates();
 
     const stateSel = document.getElementById('stateFilter');
     if (assignedStates.length > 0) {
       selections.states = assignedStates;
+
       stateSel.innerHTML = '<option value="">All States</option>';
       assignedStates.forEach(st => {
         stateSel.innerHTML += `<option value="${st}">${st}</option>`;
       });
-      stateSel.disabled = true;
+
+      stateSel.disabled = true; // lock state selection
     } else {
       alert("No assignedStates found in profile");
     }
@@ -145,7 +137,7 @@ document.getElementById('loginBtn').addEventListener('click', async () => {
   } catch (err) {
     alert(err.message);
   }
-});   // <-- this closes the login handler properly
+});
 
 // --- Logout Button ---
 document.getElementById('logoutBtn').addEventListener('click', async () => {
