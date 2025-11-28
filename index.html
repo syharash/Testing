@@ -31,33 +31,27 @@
   <div id="dashboardDiv" style="display:none;">
     <button id="logoutBtn">Logout</button>
     <div class="filters">
-    
       <div class="field">
         <label for="yearFilter">Year</label>
         <select id="yearFilter"></select>
       </div>
-      
       <div class="field">
         <label for="monthFilter">Month & Year</label>
         <select id="monthFilter"></select>
-    </div>
-
-    <div class="field">
-      <label for="dateFilter">Date (Friday)</label>
-      <select id="dateFilter"></select>
-    </div>
-
-    <div class="field">
-      <label for="stateFilter">State</label>
-      <select id="stateFilter"></select>
-    </div>
-
-    <div class="field">
-      <label for="cityFilter">City</label>
-      <select id="cityFilter"></select>
-    </div>
-
-    <div class="spacer"></div>
+      </div>
+      <div class="field">
+        <label for="dateFilter">Date (Friday)</label>
+        <select id="dateFilter"></select>
+      </div>
+      <div class="field">
+        <label for="stateFilter">State</label>
+        <select id="stateFilter"></select>
+      </div>
+      <div class="field">
+        <label for="cityFilter">City</label>
+        <select id="cityFilter"></select>
+      </div>
+      <div class="spacer"></div>
       <button onclick="resetFilters()">Reset Filters</button>
     </div>
 
@@ -65,7 +59,7 @@
     <div id="table_div"></div>
   </div>
 
- <!-- Dashboard Logic -->
+  <!-- Dashboard Logic -->
   <script type="module">
     import { login, logout, getUserStates } from './auth.js';
 
@@ -79,95 +73,88 @@
 
     const sheetUrl = 'https://docs.google.com/spreadsheets/d/11FCt-Uhffya434cBpGsNyotV1dUrMP_hkpeoLjYisdo/gviz/tq?sheet=Sheet1&headers=1';
 
-    // Original map
-const stateCityMap = {
-  "California": ["Elk Grove, CA", "Riverside, CA", "Sacramento, CA", "Woodland, CA", "Yuba City, CA"],
-  "Florida": ["Miami, FL", "Tampa, FL"],
-  "Georgia": ["Lilburn, GA"],
-  "Illinois": ["Chicago, IL", "Lombard, IL", "Bloomington, IL", "Skokie, IL", "Schaumburg, IL"],
-  "Louisiana": ["New Orleans, LA", "St.Rose, LA"],
-  "Maryland": ["Baltimore, MD", "Ellicot City, MD"],
-  "New York": ["Bronx, NY", "Brooklyn, NY", "Long Island, NY", "Queens, NY", "Valley Stream, NY"],
-  "Pennsylvania": ["Langhorne, PA"],
-  "Texas": ["Sugar Land, TX", "Wylie, TX"],
-  "Virginia": ["Woodbridge, VA"],
-  "Washington": ["Lynnwood, WA"]
-};
-
-// Normalized map (lowercase keys and city names)
-const normalizedStateCityMap = (() => {
-  const map = {};
-  Object.keys(stateCityMap).forEach(k => {
-    const key = k.toLowerCase().trim();
-    map[key] = stateCityMap[k].map(c => c.toLowerCase().trim());
-  });
-  return map;
-})();
-    
-    let cachedFilters = {
-      years: [],
-      months: [],
-      dates: [],
-      cities: []
+    const stateCityMap = {
+      "California": ["Elk Grove, CA", "Riverside, CA", "Sacramento, CA", "Woodland, CA", "Yuba City, CA"],
+      "Florida": ["Miami, FL", "Tampa, FL"],
+      "Georgia": ["Lilburn, GA"],
+      "Illinois": ["Chicago, IL", "Lombard, IL", "Bloomington, IL", "Skokie, IL", "Schaumburg, IL"],
+      "Louisiana": ["New Orleans, LA", "St.Rose, LA"],
+      "Maryland": ["Baltimore, MD", "Ellicot City, MD"],
+      "New York": ["Bronx, NY", "Brooklyn, NY", "Long Island, NY", "Queens, NY", "Valley Stream, NY"],
+      "Pennsylvania": ["Langhorne, PA"],
+      "Texas": ["Sugar Land, TX", "Wylie, TX"],
+      "Virginia": ["Woodbridge, VA"],
+      "Washington": ["Lynnwood, WA"]
     };
+
+    // Normalized map (lowercase keys and city names)
+    const normalizedStateCityMap = (() => {
+      const map = {};
+      Object.keys(stateCityMap).forEach(k => {
+        const key = k.toLowerCase().trim();
+        map[key] = stateCityMap[k].map(c => c.toLowerCase().trim());
+      });
+      return map;
+    })();
+
+
+    let cachedFilters = { years: [], months: [], dates: [], cities: [] };
     let masterData = null;
     let table = null;
     const selections = { month: '', date: '', states: [], city: '', year: '' };
 
     // --- Login Button ---
-document.getElementById('loginBtn').addEventListener('click', async () => {
-  const email = document.getElementById('email').value;
-  const password = document.getElementById('password').value;
+    document.getElementById('loginBtn').addEventListener('click', async () => {
+      const email = document.getElementById('email').value;
+      const password = document.getElementById('password').value;
 
-  try {
-    await login(email, password);
+      try {
+        await login(email, password);
 
-    // Always returns an array from auth.js
-    const assignedStates = getUserStates().map(s => s && s.toString().trim());
+        const cleanStates = Array.from(new Set(getUserStates().map(s => s.toLowerCase().trim()).filter(Boolean)));
 
-    // Filter out falsy entries
-    const cleanStates = assignedStates.filter(Boolean);
+        const stateSel = document.getElementById('stateFilter');
+        if (cleanStates.length > 0) {
+          selections.states = cleanStates;
 
-   const stateSel = document.getElementById('stateFilter');
-   if (cleanStates.length > 0) {
-     selections.states = cleanStates;
+          stateSel.innerHTML = '<option value="">All States</option>';
+          cleanStates.forEach(st => {
+            // Show pretty label from original map keys
+            const pretty = Object.keys(stateCityMap).find(k => k.toLowerCase().trim() === st) || st;
+            stateSel.innerHTML += `<option value="${pretty}">${pretty}</option>`;
+          });
 
-     stateSel.innerHTML = '<option value="">All States</option>';
-     cleanStates.forEach(st => {
-     stateSel.innerHTML += `<option value="${st}">${st}</option>`;
-  });
+          stateSel.disabled = true;
+        } else {
+          alert("No assignedStates found in profile");
+        }
 
-    stateSel.disabled = true;
-  } else {
-    alert("No assignedStates found in profile");
-  }
+        document.getElementById('loginDiv').style.display = "none";
+        document.getElementById('dashboardDiv').style.display = "block";
 
-    document.getElementById('loginDiv').style.display = "none";
-    document.getElementById('dashboardDiv').style.display = "block";
+        refreshFilterOptions();
+        drawFilteredView();
 
-    refreshFilterOptions();
-    drawFilteredView();
+      } catch (err) {
+        alert(err.message);
+      }
+    });
 
-  } catch (err) {
-    alert(err.message);
-  }
-});
+    // --- Logout Button ---
+    document.getElementById('logoutBtn').addEventListener('click', async () => {
+      await logout();
+      selections.states = [];
+      selections.city = '';
+      const stateSel = document.getElementById('stateFilter');
+      stateSel.disabled = false;
+      stateSel.value = '';
 
-// --- Logout Button ---
-document.getElementById('logoutBtn').addEventListener('click', async () => {
-  await logout();
-  selections.states = [];   // clear array properly
-  selections.city = '';
-  const stateSel = document.getElementById('stateFilter');
-  stateSel.disabled = false;
-  stateSel.value = '';
+      document.getElementById('loginDiv').style.display = "block";
+      document.getElementById('dashboardDiv').style.display = "none";
 
-  document.getElementById('loginDiv').style.display = "block";
-  document.getElementById('dashboardDiv').style.display = "none";
+      resetFilters();
+    });
 
-  resetFilters();
-});
-    
     // --- Dashboard Initialization ---
     function init() {
       const queryString = "SELECT D, E, F, G, H, I, J, K, L, M, N, O";
@@ -213,15 +200,12 @@ document.getElementById('logoutBtn').addEventListener('click', async () => {
       });
     }
 
-    function normalize(val) {
-      return val ? val.toString().trim().toLowerCase() : '';
-    }
+    function buildFilterCache() {
+      const years = new Set();
+      const months = new Set();
+      const dates = new Set();
+      const cities = new Set();
 
-  function buildFilterCache() {
-  const years = new Set();
-  const months = new Set();
-  const dates = new Set();
-  const cities = new Set();
 
   for (let r = 0; r < masterData.getNumberOfRows(); r++) {
     const m = getVal(masterData, r, 0); // "Month & Year"
@@ -238,7 +222,7 @@ document.getElementById('logoutBtn').addEventListener('click', async () => {
 
       const year = yearMatch ? yearMatch[0] : '';
       const matchesYear = !selections.year || (year && year === selections.year);
-      const matchesMonth = !selections.month || normalize(m) === normalize(selections.month);
+      const matchesMonth = !selections.month || m.toLowerCase().trim() === selections.month.toLowerCase().trim();
 
       if (d && matchesYear && matchesMonth) {
         dates.add(d);
@@ -256,123 +240,57 @@ document.getElementById('logoutBtn').addEventListener('click', async () => {
     cities: [...cities].sort()
   };
 }
-   
-// --- Helper functions ---
-function getAllYears() {
-  const allYears = new Set();
-  for (let r = 0; r < masterData.getNumberOfRows(); r++) {
-    const m = getVal(masterData, r, 0); // "Month & Year" column
-    if (m) {
-      const yearMatch = m.match(/\b\d{4}\b/);
-      if (yearMatch) allYears.add(yearMatch[0]);
-    }
-  }
-  return [...allYears].sort();
-}
 
-function getAllMonths() {
-  const allMonths = new Set();
-  for (let r = 0; r < masterData.getNumberOfRows(); r++) {
-    const m = getVal(masterData, r, 0); // "Month & Year"
-    if (m) {
-      if (!selections.year || m.includes(selections.year)) {
-        allMonths.add(m);
-      }
-    }
-  }
-  return [...allMonths].sort();
-}
-
-function getAllDates() {
-  const allDates = new Set();
-  for (let r = 0; r < masterData.getNumberOfRows(); r++) {
-    const m = getVal(masterData, r, 0); // "Month & Year"
-    const d = getVal(masterData, r, 1); // Date (Friday)
-    if (d) {
-      const yearMatch = m.match(/\b\d{4}\b/);
-      const year = yearMatch ? yearMatch[0] : '';
-      const matchesYear = !selections.year || (year && year === selections.year);
-      const matchesMonth = !selections.month || normalize(m) === normalize(selections.month);
-      if (matchesYear && matchesMonth) {
-        allDates.add(d);
-      }
-    }
-  }
-  return [...allDates].sort();
-}
-
-function getAllCities() {
-  const allCities = new Set();
-  for (let r = 0; r < masterData.getNumberOfRows(); r++) {
-    const m = getVal(masterData, r, 0); // "Month & Year"
-    const c = getVal(masterData, r, 2); // City
-    if (c) {
-      const yearMatch = m.match(/\b\d{4}\b/);
-      const year = yearMatch ? yearMatch[0] : '';
-      const matchesYear = !selections.year || (year && year === selections.year);
-      const matchesMonth = !selections.month || normalize(m) === normalize(selections.month);
-      if (matchesYear && matchesMonth) {
-        allCities.add(c);
-      }
-    }
-  }
-  return [...allCities].sort();
-}
-
-  function getAllowedCitiesFromStates(states) {
+// --- Helper: get allowed cities from assigned states ---
+function getAllowedCitiesFromStates(states) {
   const set = new Set();
   (states || []).forEach(st => {
-    const key = st && st.toString().trim();
-    if (key && stateCityMap[key]) {
-      stateCityMap[key].forEach(c => set.add(c));
+    const key = st.toLowerCase().trim();
+    if (normalizedStateCityMap[key]) {
+      normalizedStateCityMap[key].forEach(c => set.add(c));
     }
   });
   return set;
 }
 
+
 // --- Refresh dropdowns ---
 function refreshFilterOptions() {
-  buildFilterCache(); // rebuild cache based on current selections
+  buildFilterCache();
 
-  // Year dropdown
   const yearSel = document.getElementById('yearFilter');
   yearSel.innerHTML = '<option value="">All Years</option>';
   cachedFilters.years.forEach(y => {
     yearSel.innerHTML += `<option value="${y}"${selections.year === y ? ' selected' : ''}>${y}</option>`;
   });
 
-  // Month dropdown
   const monthSel = document.getElementById('monthFilter');
   monthSel.innerHTML = '<option value="">All Months</option>';
   cachedFilters.months.forEach(m => {
     monthSel.innerHTML += `<option value="${m}"${selections.month === m ? ' selected' : ''}>${m}</option>`;
   });
 
-  // Date dropdown
   const dateSel = document.getElementById('dateFilter');
   dateSel.innerHTML = '<option value="">All Dates</option>';
   cachedFilters.dates.forEach(d => {
     dateSel.innerHTML += `<option value="${d}"${selections.date === d ? ' selected' : ''}>${d}</option>`;
   });
 
-// City dropdown (multi‑state aware)
-const citySel = document.getElementById('cityFilter');
-citySel.innerHTML = '<option value="">All Cities</option>';
+  const citySel = document.getElementById('cityFilter');
+  citySel.innerHTML = '<option value="">All Cities</option>';
 
-const allowedCities = getAllowedCitiesFromStates(selections.states);
-if (allowedCities.size > 0) {
-  // Only include cached cities that belong to assigned states
-  cachedFilters.cities.forEach(c => {
-    if (allowedCities.has(c)) {
+  const allowedCities = getAllowedCitiesFromStates(selections.states);
+  if (allowedCities.size > 0) {
+    cachedFilters.cities.forEach(c => {
+      if (allowedCities.has(c.toLowerCase().trim())) {
+        citySel.innerHTML += `<option value="${escapeHtml(c)}"${selections.city === c ? ' selected' : ''}>${escapeHtml(c)}</option>`;
+      }
+    });
+  } else {
+    cachedFilters.cities.forEach(c => {
       citySel.innerHTML += `<option value="${escapeHtml(c)}"${selections.city === c ? ' selected' : ''}>${escapeHtml(c)}</option>`;
-    }
-  });
-} else {
-  // Fallback: all cities if no state restriction
-  cachedFilters.cities.forEach(c => {
-    citySel.innerHTML += `<option value="${escapeHtml(c)}"${selections.city === c ? ' selected' : ''}>${escapeHtml(c)}</option>`;
-  });
-}
+    });
+  }
 }
 
 // --- Draw filtered view ---
@@ -380,15 +298,12 @@ function drawFilteredView() {
   const view = new google.visualization.DataView(masterData);
   const rows = [];
 
-  console.log("Assigned states:", selections.states);
-  console.log("Total rows:", masterData.getNumberOfRows());
-  
-  for (let r = 0; r < masterData.getNumberOfRows(); r++) {
-    const m = getVal(masterData, r, 0); // Month & Year
-    const d = getVal(masterData, r, 1); // Date (Friday)
-    const c = getVal(masterData, r, 2); // City
+  const allowedCities = getAllowedCitiesFromStates(selections.states);
 
-    const allowedCities = getAllowedCitiesFromStates(selections.states);
+  for (let r = 0; r < masterData.getNumberOfRows(); r++) {
+    const m = getVal(masterData, r, 0);
+    const d = getVal(masterData, r, 1);
+    const c = getVal(masterData, r, 2);
 
     const match =
       (!selections.year || m.includes(selections.year)) &&
@@ -398,76 +313,64 @@ function drawFilteredView() {
       (!selections.city || c.toLowerCase().trim() === selections.city.toLowerCase().trim());
 
     if (match) rows.push(r);
-    console.log("Row", r, "City:", c);
   }
 
   view.setRows(rows);
   table.draw(view, { showRowNumber: true, width: '100%', height: '100%' });
 }
 
-    function onYearChange() {
-      selections.year = document.getElementById('yearFilter').value;
-      refreshFilterOptions();
-      drawFilteredView();
-    }
-    
-    function onMonthChange() {
-      selections.month = document.getElementById('monthFilter').value;
-      refreshFilterOptions();
-      drawFilteredView();
-    }
-
-    function onDateChange() {
-      selections.date = document.getElementById('dateFilter').value;
-      refreshFilterOptions();
-      drawFilteredView();
-    }
-
-    function onStateChange() {
-      const selected = document.getElementById('stateFilter').value;
-      selections.states = selected ? [selected] : [];  // always an array
-      selections.city = ''; // reset city when state changes
-      refreshFilterOptions();
-      drawFilteredView();
-    }  
-
-    function onCityChange() {
-      selections.city = document.getElementById('cityFilter').value;
-      refreshFilterOptions();
-      drawFilteredView();
-    }
-
-   function resetFilters() {
-      selections.month = '';
-      selections.date = '';
-      const stateSel = document.getElementById('stateFilter');
-      if (!stateSel.disabled) selections.states = [];  // clear array if not locked
-      selections.city = '';
-
+// --- Event handlers ---
+function onYearChange() {
+  selections.year = document.getElementById('yearFilter').value;
   refreshFilterOptions();
   drawFilteredView();
 }
 
-    // Minimal HTML escaping for safety
-    function escapeHtml(str) {
-      return String(str)
-        .replace(/&/g, "&amp;")
-        .replace(/</g, "&lt;")
-        .replace(/>/g, "&gt;")
-        .replace(/"/g, "&quot;")
-        .replace(/'/g, "&#039;");
-    }
+function onMonthChange() {
+  selections.month = document.getElementById('monthFilter').value;
+  refreshFilterOptions();
+  drawFilteredView();
+}
 
-    function getAllowedCitiesFromStates(states) {
-      const set = new Set();
-      (states || []).forEach(st => {
-      const key = st.toLowerCase().trim();
-      if (normalizedStateCityMap[key]) {
-        normalizedStateCityMap[key].forEach(c => set.add(c));
-      }
-    });
-  return set;
+function onDateChange() {
+  selections.date = document.getElementById('dateFilter').value;
+  refreshFilterOptions();
+  drawFilteredView();
+}
+
+function onStateChange() {
+  const selected = document.getElementById('stateFilter').value;
+  selections.states = selected ? [selected.toLowerCase().trim()] : [];
+  selections.city = '';
+  refreshFilterOptions();
+  drawFilteredView();
+}
+
+function onCityChange() {
+  selections.city = document.getElementById('cityFilter').value;
+  refreshFilterOptions();
+  drawFilteredView();
+}
+
+function resetFilters() {
+  selections.month = '';
+  selections.date = '';
+  const stateSel = document.getElementById('stateFilter');
+  if (!stateSel.disabled) selections.states = [];
+  selections.city = '';
+  refreshFilterOptions();
+  drawFilteredView();
+}
+
+// Minimal HTML escaping
+function escapeHtml(str) {
+  return String(str)
+    .replace(/&/g, "&amp;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;")
+    .replace(/"/g, "&quot;")
+    .replace(/'/g, "&#039;");
 }
   </script>
 </body>
-</html>
+</html>     
