@@ -49,11 +49,32 @@ export async function logout() {
   currentUserProfile = null;
 }
 
-// --- Get Assigned State ---
-export function getUserState() {
-  return currentUserProfile ? currentUserProfile.assignedState : null;
-}
+// --- Get Assigned States (always returns an array) ---
+export function getUserStates() {
+  if (!currentUserProfile) return [];
 
+  const raw = currentUserProfile.assignedStates || currentUserProfile.assignedState;
+
+  if (Array.isArray(raw)) {
+    return raw;
+  }
+
+  if (typeof raw === "string") {
+    // Try to parse JSON string
+    try {
+      const parsed = JSON.parse(raw);
+      return Array.isArray(parsed) ? parsed : [parsed];
+    } catch {
+      // Handle legacy "[Maryland, Virginia]" format
+      if (raw.startsWith("[") && raw.endsWith("]")) {
+        return raw.replace(/^\[|\]$/g, "").split(",").map(s => s.trim());
+      }
+      return [raw];
+    }
+  }
+
+  return [];
+}
 // --- Get Current Profile ---
 export function getUserProfile() {
   return currentUserProfile;
