@@ -355,6 +355,9 @@ function drawFilteredView() {
   const view = new google.visualization.DataView(masterData);
   const rows = [];
 
+  console.log("Assigned states:", selections.states);
+  console.log("Total rows:", masterData.getNumberOfRows());
+  
   for (let r = 0; r < masterData.getNumberOfRows(); r++) {
     const m = getVal(masterData, r, 0); // Month & Year
     const d = getVal(masterData, r, 1); // Date (Friday)
@@ -368,6 +371,7 @@ function drawFilteredView() {
       (!selections.city || normalize(c) === normalize(selections.city));
 
     if (match) rows.push(r);
+    console.log("Row", r, "City:", c);
   }
 
   view.setRows(rows);
