@@ -79,20 +79,31 @@
 
     const sheetUrl = 'https://docs.google.com/spreadsheets/d/11FCt-Uhffya434cBpGsNyotV1dUrMP_hkpeoLjYisdo/gviz/tq?sheet=Sheet1&headers=1';
 
-    const stateCityMap = {
-      "California": ["Elk Grove, CA", "Riverside, CA", "Sacramento, CA", "Woodland, CA", "Yuba City, CA"],
-      "Florida": ["Miami, FL", "Tampa, FL"],
-      "Georgia": ["Lilburn, GA"],
-      "Illinois": ["Chicago, IL", "Lombard, IL", "Bloomington, IL", "Skokie, IL", "Schaumburg, IL"],
-      "Louisiana": ["New Orleans, LA", "St.Rose, LA"],
-      "Maryland": ["Baltimore, MD", "Ellicot City, MD"],
-      "New York": ["Bronx, NY", "Brooklyn, NY", "Long Island, NY", "Queens, NY", "Valley Stream, NY"],
-      "Pennsylvania": ["Langhorne, PA"],
-      "Texas": ["Sugar Land, TX", "Wylie, TX"],
-      "Virginia": ["Woodbridge, VA"],
-      "Washington": ["Lynnwood, WA"]
-    };
+    // Original map
+const stateCityMap = {
+  "California": ["Elk Grove, CA", "Riverside, CA", "Sacramento, CA", "Woodland, CA", "Yuba City, CA"],
+  "Florida": ["Miami, FL", "Tampa, FL"],
+  "Georgia": ["Lilburn, GA"],
+  "Illinois": ["Chicago, IL", "Lombard, IL", "Bloomington, IL", "Skokie, IL", "Schaumburg, IL"],
+  "Louisiana": ["New Orleans, LA", "St.Rose, LA"],
+  "Maryland": ["Baltimore, MD", "Ellicot City, MD"],
+  "New York": ["Bronx, NY", "Brooklyn, NY", "Long Island, NY", "Queens, NY", "Valley Stream, NY"],
+  "Pennsylvania": ["Langhorne, PA"],
+  "Texas": ["Sugar Land, TX", "Wylie, TX"],
+  "Virginia": ["Woodbridge, VA"],
+  "Washington": ["Lynnwood, WA"]
+};
 
+// Normalized map (lowercase keys and city names)
+const normalizedStateCityMap = (() => {
+  const map = {};
+  Object.keys(stateCityMap).forEach(k => {
+    const key = k.toLowerCase().trim();
+    map[key] = stateCityMap[k].map(c => c.toLowerCase().trim());
+  });
+  return map;
+})();
+    
     let cachedFilters = {
       years: [],
       months: [],
@@ -381,10 +392,10 @@ function drawFilteredView() {
 
     const match =
       (!selections.year || m.includes(selections.year)) &&
-      (!selections.month || normalize(m) === normalize(selections.month)) &&
-      (!selections.date || normalize(d) === normalize(selections.date)) &&
-      (allowedCities.size === 0 || allowedCities.has(c)) &&
-      (!selections.city || normalize(c) === normalize(selections.city));
+      (!selections.month || m.toLowerCase().trim() === selections.month.toLowerCase().trim()) &&
+      (!selections.date || d.toLowerCase().trim() === selections.date.toLowerCase().trim()) &&
+      (allowedCities.size === 0 || allowedCities.has(c.toLowerCase().trim())) &&
+      (!selections.city || c.toLowerCase().trim() === selections.city.toLowerCase().trim());
 
     if (match) rows.push(r);
     console.log("Row", r, "City:", c);
@@ -446,6 +457,17 @@ function drawFilteredView() {
         .replace(/"/g, "&quot;")
         .replace(/'/g, "&#039;");
     }
+
+    function getAllowedCitiesFromStates(states) {
+      const set = new Set();
+      (states || []).forEach(st => {
+      const key = st.toLowerCase().trim();
+      if (normalizedStateCityMap[key]) {
+        normalizedStateCityMap[key].forEach(c => set.add(c));
+      }
+    });
+  return set;
+}
   </script>
 </body>
 </html>
