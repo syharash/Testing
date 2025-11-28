@@ -377,11 +377,13 @@ function drawFilteredView() {
     const d = getVal(masterData, r, 1); // Date (Friday)
     const c = getVal(masterData, r, 2); // City
 
+    const allowedCities = getAllowedCitiesFromStates(selections.states);
+
     const match =
       (!selections.year || m.includes(selections.year)) &&
       (!selections.month || normalize(m) === normalize(selections.month)) &&
       (!selections.date || normalize(d) === normalize(selections.date)) &&
-      (!selections.states.length || selections.states.some(st => stateCityMap[st] && stateCityMap[st].includes(c))) &&
+      (allowedCities.size === 0 || allowedCities.has(c)) &&
       (!selections.city || normalize(c) === normalize(selections.city));
 
     if (match) rows.push(r);
