@@ -112,21 +112,24 @@ document.getElementById('loginBtn').addEventListener('click', async () => {
     await login(email, password);
 
     // Always returns an array from auth.js
-    const assignedStates = getUserStates();
+    const assignedStates = getUserStates().map(s => s && s.toString().trim());
 
-    const stateSel = document.getElementById('stateFilter');
-    if (assignedStates.length > 0) {
-      selections.states = assignedStates;
+    // Filter out falsy entries
+    const cleanStates = assignedStates.filter(Boolean);
 
-      stateSel.innerHTML = '<option value="">All States</option>';
-      assignedStates.forEach(st => {
-        stateSel.innerHTML += `<option value="${st}">${st}</option>`;
-      });
+   const stateSel = document.getElementById('stateFilter');
+   if (cleanStates.length > 0) {
+     selections.states = cleanStates;
 
-      stateSel.disabled = true; // lock state selection
-    } else {
-      alert("No assignedStates found in profile");
-    }
+     stateSel.innerHTML = '<option value="">All States</option>';
+     cleanStates.forEach(st => {
+     stateSel.innerHTML += `<option value="${st}">${st}</option>`;
+  });
+
+    stateSel.disabled = true;
+  } else {
+    alert("No assignedStates found in profile");
+  }
 
     document.getElementById('loginDiv').style.display = "none";
     document.getElementById('dashboardDiv').style.display = "block";
@@ -305,6 +308,17 @@ function getAllCities() {
   return [...allCities].sort();
 }
 
+  function getAllowedCitiesFromStates(states) {
+  const set = new Set();
+  (states || []).forEach(st => {
+    const key = st && st.toString().trim();
+    if (key && stateCityMap[key]) {
+      stateCityMap[key].forEach(c => set.add(c));
+    }
+  });
+  return set;
+}
+
 // --- Refresh dropdowns ---
 function refreshFilterOptions() {
   buildFilterCache(); // rebuild cache based on current selections
@@ -330,24 +344,24 @@ function refreshFilterOptions() {
     dateSel.innerHTML += `<option value="${d}"${selections.date === d ? ' selected' : ''}>${d}</option>`;
   });
 
-  // City dropdown (multi‑state aware)
-  const citySel = document.getElementById('cityFilter');
-  citySel.innerHTML = '<option value="">All Cities</option>';
-  if (selections.states.length > 0) {
-    selections.states.forEach(st => {
-      if (stateCityMap[st]) {
-        stateCityMap[st].forEach(c => {
-          if (cachedFilters.cities.includes(c)) {
-            citySel.innerHTML += `<option value="${escapeHtml(c)}"${selections.city === c ? ' selected' : ''}>${escapeHtml(c)}</option>`;
-          }
-        });
-      }
-    });
-  } else {
-    cachedFilters.cities.forEach(c => {
+// City dropdown (multi‑state aware)
+const citySel = document.getElementById('cityFilter');
+citySel.innerHTML = '<option value="">All Cities</option>';
+
+const allowedCities = getAllowedCitiesFromStates(selections.states);
+if (allowedCities.size > 0) {
+  // Only include cached cities that belong to assigned states
+  cachedFilters.cities.forEach(c => {
+    if (allowedCities.has(c)) {
       citySel.innerHTML += `<option value="${escapeHtml(c)}"${selections.city === c ? ' selected' : ''}>${escapeHtml(c)}</option>`;
-    });
-  }
+    }
+  });
+} else {
+  // Fallback: all cities if no state restriction
+  cachedFilters.cities.forEach(c => {
+    citySel.innerHTML += `<option value="${escapeHtml(c)}"${selections.city === c ? ' selected' : ''}>${escapeHtml(c)}</option>`;
+  });
+}
 }
 
 // --- Draw filtered view ---
