@@ -142,11 +142,13 @@ document.getElementById('loginBtn').addEventListener('click', async () => {
     document.getElementById('loginDiv').style.display = "none";
     document.getElementById('dashboardDiv').style.display = "block";
 
+    // Build filters and draw table
     refreshFilterOptions();
-    ();
+    drawFilteredView(); // <-- this replaces the stray "();"
 
   } catch (err) {
     alert(err.message);
+    console.error('Login error:', err);
   }
 });
 
