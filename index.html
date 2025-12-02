@@ -9,9 +9,6 @@
     .filters { display: flex; gap: 16px; flex-wrap: wrap; align-items: end; margin-bottom: 16px; }
     .field { display: flex; flex-direction: column; gap: 6px; }
     .google-visualization-table-td {white-space: nowrap;}
-    .nowrap {white-space: nowrap;}
-    select, button, input { padding: 6px 10px; }
-    .spacer { flex: 1; }
     #loginDiv { margin-bottom: 20px; }
   </style>
 
@@ -361,16 +358,15 @@ function drawFilteredView() {
   // Build columns: all original columns + Delete button
   const numCols = masterData.getNumberOfColumns();
   const cols = [];
-  for (let i = 0; i < numCols - 1; i++) { // skip RowID (last column)
-    cols.push(i);
-  }
+  for (let i = 0; i < numCols - 1; i++) cols.push(i); // show all but RowID
+
   cols.push({
     type: 'string',
     label: 'Delete',
     calc: function (dt, row) {
       const rowId = dt.getValue(row, numCols - 1); // RowID is last column
-      return `<button onclick="deleteRow('${rowId}')">Delete</button>`;
-    }
+      return `<button class="delete-btn" onclick="deleteRow('${rowId}')">Delete</button>`;
+    }  
   });
 
   view.setColumns(cols);
@@ -382,11 +378,12 @@ function drawFilteredView() {
     showRowNumber: true,
     width: '100%',
     height: '100%',
-    allowHtml: true,
+    allowHtml: true,              // <-- required for the button
     columns: colWidths.map(w => ({ width: w })),
     cssClassNames: { tableCell: 'nowrap' }
-  });
+});
 }
+    
 // --- Event handlers ---
 function onYearChange() {
   selections.year = document.getElementById('yearFilter').value;
@@ -440,20 +437,24 @@ function escapeHtml(str) {
     .replace(/'/g, "&#039;");
 }
 
-async function deleteRow(rowId) {
-  const userEmail = firebase.auth().currentUser.email; // current logged-in user
-  const response = await fetch("https://script.google.com/macros/s/AKfycbzqEJwlx-EsBCG8UAxgRB47YFBFss3SMIB6afgkxTMDBPezlUP8NBQpOviklqZvPI41/exec", {
+// Expose globally in your type="module" script
+window.deleteRow = async function deleteRow(rowId) {
+  const userEmail = firebase.auth().currentUser.email;
+  console.log("Deleting rowId:", rowId, "for user:", userEmail);
+
+  const response = await fetch("https://script.google.com/macros/s/AKfycbwga7_vNoyfVN1wCx92Xp2tmJYb1Hf_xeAbt5l25jHWiYjWsSyLSU_gx1z_MeoTUWOr/exec", {
     method: "POST",
     body: JSON.stringify({ rowId, userEmail }),
     headers: { "Content-Type": "application/json" }
   });
+
   const result = await response.text();
   console.log("Server response:", result);
   alert(result);
-  
+
   refreshFilterOptions();
   drawFilteredView();
-}
+};
 </script>
 </body>
 </html>     
