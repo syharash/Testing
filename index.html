@@ -448,7 +448,9 @@ async function deleteRow(rowId) {
     headers: { "Content-Type": "application/json" }
   });
   const result = await response.text();
+  console.log("Server response:", result);
   alert(result);
+  
   refreshFilterOptions();
   drawFilteredView();
 }
