@@ -440,22 +440,25 @@ function escapeHtml(str) {
 }
 
 // Expose globally in your type="module" script
-// Expose globally so inline onclick works
 window.deleteRow = async function deleteRow(rowId) {
   console.log("Deleting rowId:", rowId, "for user:", currentUserEmail);
 
-  const response = await fetch("https://script.google.com/macros/s/AKfycbwga7_vNoyfVN1wCx92Xp2tmJYb1Hf_xeAbt5l25jHWiYjWsSyLSU_gx1z_MeoTUWOr/exec", {
-    method: "POST",
-    body: JSON.stringify({ rowId, userEmail: currentUserEmail }),
-    headers: { "Content-Type": "application/json" }
-  });
+  const url = "https://script.google.com/macros/s/AKfycbzmubrg5R9em0xlaxLIvi8Uxvf8IgikbKJJRsC0yb5F_npIizChLJ8xv48v5gErtbr9/exec"
+    + "?rowId=" + encodeURIComponent(rowId)
+    + "&userEmail=" + encodeURIComponent(currentUserEmail);
 
-  const result = await response.text();
-  console.log("Server response:", result);
-  alert(result);
+  try {
+    const response = await fetch(url); // GET request
+    const result = await response.text();
+    console.log("Server response:", result);
+    alert(result);
 
-  refreshFilterOptions();
-  drawFilteredView();
+    refreshFilterOptions();
+    drawFilteredView();
+  } catch (err) {
+    console.error("Delete failed:", err);
+    alert("Delete failed: " + err.message);
+  }
 };
 </script>
 </body>
