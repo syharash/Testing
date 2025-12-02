@@ -10,6 +10,27 @@
     .field { display: flex; flex-direction: column; gap: 6px; }
     .google-visualization-table-td {white-space: nowrap;}
     #loginDiv { margin-bottom: 20px; }
+    #loading {
+      display: none;
+      margin: 15px 0;
+      font-weight: bold;
+      color: #0066cc;
+      text-align: center;
+    }  
+   .spinner {
+      border: 4px solid #f3f3f3;
+      border-top: 4px solid #0066cc;
+      border-radius: 50%;
+      width: 24px;
+      height: 24px;
+      animation: spin 1s linear infinite;
+      margin: 0 auto 8px auto;
+    }
+
+    @keyframes spin {
+      0% { transform: rotate(0deg); }
+      100% { transform: rotate(360deg); }
+    }
   </style>
 
   <!-- Google Charts -->
@@ -54,9 +75,17 @@
       <button onclick="resetFilters()">Reset Filters</button>
     </div>
 
+    <div id="loading" style="display:none; margin:10px; font-weight:bold; color:#0066cc;">
+      🔄 Refreshing data, please wait...
+    </div>
+    <div id="loading" style="display:none;">
+    <div class="spinner"></div>
+    <div>Refreshing data, please wait...</div>
+    </div>
+    
     <!-- Table container -->
     <div id="table_div"></div>
-  </div>
+    </div>
 
   <!-- Dashboard Logic -->
   <script type="module">
@@ -450,18 +479,42 @@ window.deleteRow = async function deleteRow(rowId) {
     + "&userEmail=" + encodeURIComponent(currentUserEmail);
 
   try {
-    const response = await fetch(url); // GET request
+    const response = await fetch(url);
     const result = await response.text();
     console.log("Server response:", result);
     alert(result);
 
-    refreshFilterOptions();
-    drawFilteredView();
+    // Reload sheet data, then refresh filters and redraw
+    reloadData(() => {
+      refreshFilterOptions();
+      drawFilteredView();
+    });
+
   } catch (err) {
     console.error("Delete failed:", err);
     alert("Delete failed: " + err.message);
   }
 };
+
+// To refresh the page after the successful deletion of the row(s)
+    
+function reloadData(callback) {
+  document.getElementById('loading').style.display = "block"; // show spinner
+
+  const queryString = "SELECT D, E, F, G, H, I, J, K, L, M, N, O, P";
+  const query = new google.visualization.Query(sheetUrl + "&tq=" + encodeURIComponent(queryString));
+  query.send(response => {
+    document.getElementById('loading').style.display = "none"; // hide spinner
+
+    if (response.isError()) {
+      alert('Error reloading data: ' + response.getMessage());
+      return;
+    }
+    masterData = response.getDataTable();
+    if (callback) callback();
+  });
+}
+    
 </script>
 </body>
 </html>     
