@@ -111,6 +111,8 @@ document.getElementById('loginBtn').addEventListener('click', async () => {
 
   try {
     await login(email, password);
+    currentUserEmail = email;
+    console.log("Logged in as:", currentUserEmail);
 
     // Normalize states returned from auth.js
     const cleanStates = Array.from(
@@ -443,7 +445,7 @@ function escapeHtml(str) {
 window.deleteRow = async function deleteRow(rowId) {
   console.log("Deleting rowId:", rowId, "for user:", currentUserEmail);
 
-  const url = "https://script.google.com/macros/s/AKfycbzmubrg5R9em0xlaxLIvi8Uxvf8IgikbKJJRsC0yb5F_npIizChLJ8xv48v5gErtbr9/exec"
+  const url = "https://script.google.com/macros/s/AKfycbxwg-bSinrH3S5fgHfY3z7gJmOYUN0FAlUOxFFbBcWc3yd9QgR_4mpBitjtb9bxApU/exec"
     + "?rowId=" + encodeURIComponent(rowId)
     + "&userEmail=" + encodeURIComponent(currentUserEmail);
 
