@@ -180,7 +180,7 @@ document.getElementById('logoutBtn').addEventListener('click', async () => {
 });
     // --- Dashboard Initialization ---
     function init() {
-      const queryString = "SELECT D, E, F, G, H, I, J, K, L, M, N, O";
+      const queryString = "SELECT D, E, F, G, H, I, J, K, L, M, N, O, P";
       const query = new google.visualization.Query(sheetUrl + "&tq=" + encodeURIComponent(queryString));
       query.send(handleInitialResponse);
     }
