@@ -474,7 +474,7 @@ function escapeHtml(str) {
 window.deleteRow = async function deleteRow(rowId) {
   console.log("Deleting rowId:", rowId, "for user:", currentUserEmail);
 
-  const url = "https://script.google.com/macros/s/AKfycbxwg-bSinrH3S5fgHfY3z7gJmOYUN0FAlUOxFFbBcWc3yd9QgR_4mpBitjtb9bxApU/exec"
+  const url = "https://script.google.com/macros/s/AKfycbyMkPjVpxFm4pL3yMCqqK-8UZR8x6YHfH9JyvOXyRdaVQsqqva5ZaUXZEdyi1ynpidt/exec"
     + "?rowId=" + encodeURIComponent(rowId)
     + "&userEmail=" + encodeURIComponent(currentUserEmail);
 
