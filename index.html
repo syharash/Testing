@@ -500,7 +500,8 @@ window.deleteRow = async function deleteRow(rowId, name, email, rowState) {
   const profile = getUserProfile();
   const role = profile?.role || "state_admin";
   const allowedStates = getUserStates();
-
+  const userStates = getUserStates().join(","); // e.g."maryland, virginia"
+  
   const safeRowState = (rowState || "").toLowerCase().trim();
 
   // Authorization check
@@ -515,7 +516,7 @@ window.deleteRow = async function deleteRow(rowId, name, email, rowState) {
     + "?rowId=" + encodeURIComponent(rowId)
     + "&userEmail=" + encodeURIComponent(profile.email)
     + "&userRole=" + encodeURIComponent(role)
-    + "&rowState=" + encodeURIComponent(rowState);
+    + "&userStates=" + encodeURIComponent(userStates);
 
   try {
     const response = await fetch(url);
