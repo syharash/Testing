@@ -493,7 +493,7 @@ window.deleteRow = async function deleteRow(rowId, name, email, rowState) {
 
   if (!confirm(`Are you sure you want to delete ${name} (${email})?`)) return;
 
-  const url = "https://script.google.com/macros/s/.../exec"
+  const url = "https://script.google.com/macros/s/AKfycbxouDPRLJB98uGgG0C3Y4pmc9DRddMkMHcp_qPTCuzo3nNjD2lD-TXUWiHJ8Orql1e8/exec"
     + "?rowId=" + encodeURIComponent(rowId)
     + "&userEmail=" + encodeURIComponent(currentUserEmail)
     + "&userRole=" + encodeURIComponent(role)
