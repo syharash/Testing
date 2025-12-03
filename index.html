@@ -541,7 +541,7 @@ window.deleteRow = async function deleteRow(rowId, name, email, rowState) {
 function reloadData(callback) {
   document.getElementById('loading').style.display = "block"; // show spinner
 
-  const queryString = "SELECT D, E, F, G, H, I, J, K, L, M, N, O, P";
+  const queryString = "SELECT B, C, D, E, F, G, H, I, J, K, L, M, N, O, P";
   const query = new google.visualization.Query(sheetUrl + "&tq=" + encodeURIComponent(queryString));
   query.send(response => {
     document.getElementById('loading').style.display = "none"; // hide spinner
