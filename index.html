@@ -266,7 +266,11 @@ document.getElementById('logoutBtn').addEventListener('click', async () => {
     }
 
     function buildFilterCache() {
-      if (!masterData) return; // prevent null reference
+      if (!masterData) {
+        console.warn("masterData not initialized yet");
+        return;
+      }  
+
       const years = new Set();
       const months = new Set();
       const dates = new Set();
@@ -379,7 +383,10 @@ function getColumnWidths(dataView) {
 
 // --- Draw filtered view with auto column widths ---
 function drawFilteredView() {
-  if (!masterData) return; // guard against null
+  if (!masterData) {
+    console.warn("masterData not initialized yet");
+    return;
+  }
 
   const view = new google.visualization.DataView(masterData);
   const rows = [];
