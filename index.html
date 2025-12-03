@@ -223,8 +223,8 @@ document.getElementById('logoutBtn').addEventListener('click', async () => {
       }
       masterData = response.getDataTable();
       
-      masterData.setColumnLabel(0, "Name");
-      masterData.setColumnLabel(1, "Email");
+      masterData.setColumnLabel(0, "Email");
+      masterData.setColumnLabel(1, "Name");
       masterData.setColumnLabel(2, "Month & Year");
       masterData.setColumnLabel(3, "Date (Friday)");
       masterData.setColumnLabel(4, "City");
@@ -409,15 +409,20 @@ function drawFilteredView() {
   view.setColumns(cols);
 
   // Calculate widths dynamically
-  const colWidths = getColumnWidths(view);
+const colWidths = getColumnWidths(view);
 
-  table.draw(view, {
-    showRowNumber: true,
-    width: '100%',
-    height: '100%',
-    allowHtml: true,              // <-- required for the button
-    columns: colWidths.map(w => ({ width: w })),
-    cssClassNames: { tableCell: 'nowrap' }
+// Override specific columns to prevent wrapping
+colWidths[1] = 220;  // Email column
+colWidths[2] = 160;  // Month & Year column
+colWidths[4] = 180;  // City column
+
+table.draw(view, {
+  showRowNumber: true,
+  width: '100%',
+  height: '100%',
+  allowHtml: true,
+  columns: colWidths.map(w => ({ width: w })),
+  cssClassNames: { tableCell: 'nowrap' }
 });
 }
     
