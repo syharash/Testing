@@ -348,7 +348,7 @@ function refreshFilterOptions() {
   }
 }
 
-// --- Draw filtered view ---
+    
 // --- Helper: calculate column widths based on content ---
 function getColumnWidths(dataView) {
   const widths = [];
@@ -475,12 +475,24 @@ function escapeHtml(str) {
 }
 
 // Expose globally in your type="module" script
-window.deleteRow = async function deleteRow(rowId, name, email) {
+window.deleteRow = async function deleteRow(rowId, name, email, rowState) {
+  const profile = getUserProfile();
+  const role = profile?.role || "state_admin";  // default if missing
+  const allowedStates = getUserStates();
+
+  // Authorization check
+  if (role !== "global_admin" && !allowedStates.includes(rowState.toLowerCase().trim())) {
+    alert(`You are not authorized to delete rows for ${rowState}.`);
+    return;
+  }
+
   if (!confirm(`Are you sure you want to delete ${name} (${email})?`)) return;
 
   const url = "https://script.google.com/macros/s/.../exec"
     + "?rowId=" + encodeURIComponent(rowId)
-    + "&userEmail=" + encodeURIComponent(currentUserEmail);
+    + "&userEmail=" + encodeURIComponent(currentUserEmail)
+    + "&userRole=" + encodeURIComponent(role)
+    + "&rowState=" + encodeURIComponent(rowState);
 
   try {
     const response = await fetch(url);
