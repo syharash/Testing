@@ -509,7 +509,7 @@ window.deleteRow = async function deleteRow(rowId, name, email, rowState) {
 
   if (!confirm(`Are you sure you want to delete ${name} (${email})?`)) return;
 
-  const url = "https://script.google.com/macros/s/AKfycbwxdj2_OSwcrlxaTV8H-20CORdw1QA7bJftIROBsIH3ovX_i4Zp1loaNYMYcWKGdTRa/exec"
+  const url = "https://script.google.com/macros/s/AKfycbyfcwptEs37A3wnfVk_X2eUeHjsORI9ls9PzpCut7A0w8vrq_f3OzGovX4E4QhGK33n/exec"
     + "?rowId=" + encodeURIComponent(rowId)
     + "&userEmail=" + encodeURIComponent(profile.email)
     + "&userRole=" + encodeURIComponent(role)
