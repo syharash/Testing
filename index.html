@@ -508,7 +508,7 @@ function escapeHtml(str) {
 window.deleteRow = async function deleteRow(rowId, name, email, rowState) {
   const profile = getUserProfile();
   const role = profile?.role || "state_admin";
-  const allowedStates = getUserStates().map(s ==> s.toLower().trim();
+  const allowedStates = getUserStates().map(s => String(s).toLowerCase().trim());
   const userStates = getUserStates().join(","); // e.g."maryland, virginia"
   
   const safeRowState = (rowState || "").toLowerCase().trim();
