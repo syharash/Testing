@@ -115,6 +115,19 @@
       "Washington": ["Lynnwood, WA"]
     };
 
+    // --- Helper: derive State from City ---
+    function getStateFromCity(city) {
+      if (!city) return "";
+      const normalizedCity = city.toLowerCase().trim();
+
+      for (const [state, cities] of Object.entries(stateCityMap)) {
+        if (cities.some(c => c.toLowerCase().trim() === normalizedCity)) {
+          return state; // return the pretty state name
+        }  
+      }
+    return ""; // no match found
+  }  
+    
     // Normalized map (lowercase keys and city names)
     const normalizedStateCityMap = (() => {
       const map = {};
@@ -395,16 +408,19 @@ function drawFilteredView() {
   const cols = [];
   for (let i = 0; i < numCols - 1; i++) cols.push(i); // show all but RowID
 
- cols.push({
-  type: 'string',
-  label: 'Delete',
-  calc: function (dt, row) {
-    const rowId = dt.getValue(row, numCols - 1); // RowID is last column
-    const name = dt.getValue(row, 0); // Name
-    const email = dt.getValue(row, 1); // Email
-    return `<button class="delete-btn" onclick="deleteRow('${rowId}', '${name}', '${email}')">Delete</button>`;
-  }
-});
+  cols.push({
+    type: 'string',
+    label: 'Delete',
+    calc: function (dt, row) {
+      const rowId = dt.getValue(row, numCols - 1); // RowID
+      const name = dt.getValue(row, 0);            // Name
+      const email = dt.getValue(row, 1);           // Email
+      const city = dt.getValue(row, 4);            // City
+      const state = getStateFromCity(city);        // derive State from City
+
+      return `<button class="delete-btn" onclick="deleteRow('${rowId}', '${name}', '${email}', '${state}')">Delete</button>`;
+    }  
+  });
 
   view.setColumns(cols);
 
@@ -482,12 +498,14 @@ function escapeHtml(str) {
 // Expose globally in your type="module" script
 window.deleteRow = async function deleteRow(rowId, name, email, rowState) {
   const profile = getUserProfile();
-  const role = profile?.role || "state_admin";  // default if missing
+  const role = profile?.role || "state_admin";
   const allowedStates = getUserStates();
 
+  const safeRowState = (rowState || "").toLowerCase().trim();
+
   // Authorization check
-  if (role !== "global_admin" && !allowedStates.includes(rowState.toLowerCase().trim())) {
-    alert(`You are not authorized to delete rows for ${rowState}.`);
+  if (role !== "global_admin" && !allowedStates.includes(safeRowState)) {
+    alert(`You are not authorized to delete rows for ${rowState || "Unknown State"}.`);
     return;
   }
 
@@ -495,7 +513,7 @@ window.deleteRow = async function deleteRow(rowId, name, email, rowState) {
 
   const url = "https://script.google.com/macros/s/AKfycbxouDPRLJB98uGgG0C3Y4pmc9DRddMkMHcp_qPTCuzo3nNjD2lD-TXUWiHJ8Orql1e8/exec"
     + "?rowId=" + encodeURIComponent(rowId)
-    + "&userEmail=" + encodeURIComponent(currentUserEmail)
+    + "&userEmail=" + encodeURIComponent(profile.email)
     + "&userRole=" + encodeURIComponent(role)
     + "&rowState=" + encodeURIComponent(rowState);
 
