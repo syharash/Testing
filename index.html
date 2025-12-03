@@ -529,8 +529,12 @@ window.deleteRow = async function deleteRow(rowId, name, email, rowState) {
     const response = await fetch(url);
     const result = await response.text();
     alert(result);
-    refreshFilterOptions();
-    drawFilteredView();
+
+    // ✅ Reload fresh data from sheet
+    reloadData(() => {
+      refreshFilterOptions();
+      drawFilteredView();
+    });
   } catch (err) {
     alert("Delete failed: " + err.message);
   }
