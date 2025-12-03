@@ -263,9 +263,9 @@ document.getElementById('logoutBtn').addEventListener('click', async () => {
 
 
   for (let r = 0; r < masterData.getNumberOfRows(); r++) {
-    const m = getVal(masterData, r, 0); // "Month & Year"
-    const d = getVal(masterData, r, 1); // Date (Friday)
-    const c = getVal(masterData, r, 2); // City
+    const m = getVal(masterData, r, 2); // "Month & Year"
+    const d = getVal(masterData, r, 3); // Date (Friday)
+    const c = getVal(masterData, r, 4); // City
 
     if (m) {
       const yearMatch = m.match(/\b\d{4}\b/);
@@ -374,9 +374,9 @@ function drawFilteredView() {
   const allowedCities = getAllowedCitiesFromStates(selections.states);
 
   for (let r = 0; r < masterData.getNumberOfRows(); r++) {
-    const m = getVal(masterData, r, 0); // Month & Year
-    const d = getVal(masterData, r, 1); // Date (Friday)
-    const c = getVal(masterData, r, 2); // City
+    const m = getVal(masterData, r, 2); // Month & Year
+    const d = getVal(masterData, r, 3); // Date (Friday)
+    const c = getVal(masterData, r, 4); // City
 
     const match =
       (!selections.year || m.includes(selections.year)) &&
