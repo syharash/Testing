@@ -76,6 +76,23 @@
       <button onclick="resetFilters()">Reset Filters</button>
     </div>
 
+  <div id="modifyModal" style="display:none;">
+  <h3>Modify Row</h3>
+    <form id="modifyForm">
+      <label>Number of Participants <input id="modParticipants"></label>
+      <label>Invitation through calls <input id="modCalls"></label>
+      <label>Intentions before Tilawat <input id="modTilawat"></label>
+      <label>Intentions before Naat <input id="modNaat"></label>
+      <label>Duration of Bayan (minutes) <input id="modBayan"></label>
+      <label>Was Madani Halqa Conducted? <input id="modHalqa"></label>
+      <label>Was Sunnahs and Manners taught? <input id="modSunnahs"></label>
+      <label>Was Learning/Memorizing Dua conducted? <input id="modDua"></label>
+      <label>Was Pious Deed Booklet filled? <input id="modBooklet"></label>
+      <button type="submit">Save</button>
+      <button type="button" onclick="closeModifyDialog()">Cancel</button>
+  </form>
+  </div>
+    
     <div id="loading" style="display:none; margin:10px; font-weight:bold; color:#0066cc;">
       🔄 Refreshing data, please wait...
     </div>
@@ -416,18 +433,18 @@ function drawFilteredView() {
 
   cols.push({
   type: 'string',
-  label: 'Delete',
+  label: 'Actions',
   calc: function (dt, row) {
     const rowId = dt.getValue(row, numCols - 1); // RowID
-    const email = dt.getValue(row, 0);           // Email
-    const name  = dt.getValue(row, 1);           // Name
-
-    // Safe city handling
-    const rawCity = dt.getValue(row, 4);
-    const city = String(rawCity || "").trim();
+    const email = dt.getValue(row, 1);           // Email
+    const name  = dt.getValue(row, 2);           // Name
+    const city  = String(dt.getValue(row, 5) || "").trim();
     const state = getStateFromCity(city);
 
-    return `<button class="delete-btn" onclick="deleteRow('${rowId}', '${name}', '${email}', '${state}')">Delete</button>`;
+    return `
+      <button class="delete-btn" onclick="deleteRow('${rowId}', '${name}', '${email}', '${state}')">Delete</button>
+      <button class="modify-btn" onclick="openModifyDialog('${rowId}', '${state}')">Modify</button>
+    `;
   }
 });
 
