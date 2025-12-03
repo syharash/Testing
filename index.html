@@ -34,8 +34,9 @@
   </style>
 
   <!-- Google Charts -->
-  <script type="text/javascript" src="https://www.gstatic.com/charts/loader.js"></script>
+<script type="text/javascript" src="https://www.gstatic.com/charts/loader.js"></script>
 </head>
+  
 <body>
   <h2>Ijtima Performance Data (Month → Date → State → City)</h2>
 
@@ -378,19 +379,6 @@ function getColumnWidths(dataView) {
 
 // --- Draw filtered view with auto column widths ---
 function drawFilteredView() {
-  if (!masterData) return; // guard against null
-
-  const view = new google.visualization.DataView(masterData);
-  const rows = [];
-
-  const allowedCities = getAllowedCitiesFromStates(selections.states);
-
-  for (let r = 0; r < masterData.getNumberOfRows(); r++) {
-    const m = getVal(masterData, r, 2); // Month & Year
-    const d = getVal(masterData, r, 3); // Date (Friday)
-    const c = getVal(masterData, r, 4); // City
-
-    function drawFilteredView() {
   if (!masterData) return; // guard against null
 
   const view = new google.visualization.DataView(masterData);
