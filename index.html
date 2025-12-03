@@ -419,9 +419,9 @@ function drawFilteredView() {
     label: 'Delete',
     calc: function (dt, row) {
       const rowId = dt.getValue(row, numCols - 1); // RowID
-      const email = dt.getValue(row, 0);           // Email
-      const name  = dt.getValue(row, 1);           // Name
-      const city  = dt.getValue(row, 4);           // City
+      const email = dt.getValue(row, 1);           // Email
+      const name  = dt.getValue(row, 2);           // Name
+      const city  = dt.getValue(row, 5);           // City
       const state = getStateFromCity(city);
 
       return `<button class="delete-btn" onclick="deleteRow('${rowId}', '${name}', '${email}', '${state}')">Delete</button>`;
