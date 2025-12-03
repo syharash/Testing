@@ -415,18 +415,21 @@ function drawFilteredView() {
   for (let i = 0; i < numCols - 1; i++) cols.push(i); // show all but RowID
 
   cols.push({
-    type: 'string',
-    label: 'Delete',
-    calc: function (dt, row) {
-      const rowId = dt.getValue(row, numCols - 1); // RowID
-      const email = dt.getValue(row, 1);           // Email
-      const name  = dt.getValue(row, 2);           // Name
-      const city  = dt.getValue(row, 5);           // City
-      const state = getStateFromCity(city);
+  type: 'string',
+  label: 'Delete',
+  calc: function (dt, row) {
+    const rowId = dt.getValue(row, numCols - 1); // RowID
+    const email = dt.getValue(row, 0);           // Email
+    const name  = dt.getValue(row, 1);           // Name
 
-      return `<button class="delete-btn" onclick="deleteRow('${rowId}', '${name}', '${email}', '${state}')">Delete</button>`;
-    }
-  });
+    // Safe city handling
+    const rawCity = dt.getValue(row, 4);
+    const city = String(rawCity || "").trim();
+    const state = getStateFromCity(city);
+
+    return `<button class="delete-btn" onclick="deleteRow('${rowId}', '${name}', '${email}', '${state}')">Delete</button>`;
+  }
+});
 
   view.setColumns(cols);
 
