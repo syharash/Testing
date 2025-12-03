@@ -113,17 +113,17 @@
     };
 
     // --- Helper: derive State from City ---
-    function getStateFromCity(city) {
-      if (!city) return "";
-      const normalizedCity = city.toLowerCase().trim();
+function getStateFromCity(city) {
+  const normalizedCity = String(city || "").toLowerCase().trim();
+  if (!normalizedCity) return "";
 
-      for (const [state, cities] of Object.entries(stateCityMap)) {
-        if (cities.some(c => c.toLowerCase().trim() === normalizedCity)) {
-          return state; // return the pretty state name
-        }  
-      }
-    return ""; // no match found
-  }  
+  for (const [state, cities] of Object.entries(stateCityMap)) {
+    if (cities.some(c => String(c || "").toLowerCase().trim() === normalizedCity)) {
+      return state;
+    }
+  }
+  return "";
+}
     
     // Normalized map (lowercase keys and city names)
     const normalizedStateCityMap = (() => {
