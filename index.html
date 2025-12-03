@@ -78,11 +78,7 @@
     <div id="loading" style="display:none; margin:10px; font-weight:bold; color:#0066cc;">
       🔄 Refreshing data, please wait...
     </div>
-    <div id="loading" style="display:none;">
-    <div class="spinner"></div>
-    <div>Refreshing data, please wait...</div>
-    </div>
-    
+        
     <!-- Table container -->
     <div id="table_div"></div>
     </div>
@@ -269,6 +265,7 @@ document.getElementById('logoutBtn').addEventListener('click', async () => {
     }
 
     function buildFilterCache() {
+      if (!masterData) return; // prevent null reference
       const years = new Set();
       const months = new Set();
       const dates = new Set();
@@ -381,6 +378,21 @@ function getColumnWidths(dataView) {
 
 // --- Draw filtered view with auto column widths ---
 function drawFilteredView() {
+  if (!masterData) return; // guard against null
+
+  const view = new google.visualization.DataView(masterData);
+  const rows = [];
+
+  const allowedCities = getAllowedCitiesFromStates(selections.states);
+
+  for (let r = 0; r < masterData.getNumberOfRows(); r++) {
+    const m = getVal(masterData, r, 2); // Month & Year
+    const d = getVal(masterData, r, 3); // Date (Friday)
+    const c = getVal(masterData, r, 4); // City
+
+    function drawFilteredView() {
+  if (!masterData) return; // guard against null
+
   const view = new google.visualization.DataView(masterData);
   const rows = [];
 
@@ -392,18 +404,17 @@ function drawFilteredView() {
     const c = getVal(masterData, r, 4); // City
 
     const match =
-      (!selections.year || m.includes(selections.year)) &&
-      (!selections.month || m.toLowerCase().trim() === selections.month.toLowerCase().trim()) &&
-      (!selections.date || d.toLowerCase().trim() === selections.date.toLowerCase().trim()) &&
-      (allowedCities.size === 0 || allowedCities.has(c.toLowerCase().trim())) &&
-      (!selections.city || c.toLowerCase().trim() === selections.city.toLowerCase().trim());
+      (!selections.year || String(m || "").includes(selections.year)) &&
+      (!selections.month || String(m || "").toLowerCase().trim() === selections.month.toLowerCase().trim()) &&
+      (!selections.date || String(d || "").toLowerCase().trim() === selections.date.toLowerCase().trim()) &&
+      (allowedCities.size === 0 || allowedCities.has(String(c || "").toLowerCase().trim())) &&
+      (!selections.city || String(c || "").toLowerCase().trim() === selections.city.toLowerCase().trim());
 
     if (match) rows.push(r);
   }
 
   view.setRows(rows);
 
-  // Build columns: all original columns + Delete button
   const numCols = masterData.getNumberOfColumns();
   const cols = [];
   for (let i = 0; i < numCols - 1; i++) cols.push(i); // show all but RowID
@@ -413,34 +424,32 @@ function drawFilteredView() {
     label: 'Delete',
     calc: function (dt, row) {
       const rowId = dt.getValue(row, numCols - 1); // RowID
-      const name = dt.getValue(row, 0);            // Name
-      const email = dt.getValue(row, 1);           // Email
-      const city = dt.getValue(row, 4);            // City
-      const state = getStateFromCity(city);        // derive State from City
+      const email = dt.getValue(row, 0);           // Email
+      const name  = dt.getValue(row, 1);           // Name
+      const city  = dt.getValue(row, 4);           // City
+      const state = getStateFromCity(city);
 
       return `<button class="delete-btn" onclick="deleteRow('${rowId}', '${name}', '${email}', '${state}')">Delete</button>`;
-    }  
+    }
   });
 
   view.setColumns(cols);
 
-  // Calculate widths dynamically
-const colWidths = getColumnWidths(view);
+  const colWidths = getColumnWidths(view);
+  colWidths[0] = 220;  // Email column
+  colWidths[1] = 260; // Name column      
+  colWidths[2] = 160;  // Month & Year column
+  colWidths[4] = 180;  // City column
 
-// Override specific columns to prevent wrapping
-colWidths[1] = 220;  // Email column
-colWidths[2] = 160;  // Month & Year column
-colWidths[4] = 180;  // City column
-
-table.draw(view, {
-  showRowNumber: true,
-  width: '100%',
-  height: '100%',
-  allowHtml: true,
-  columns: colWidths.map(w => ({ width: w })),
-  cssClassNames: { tableCell: 'nowrap' }
-});
-}
+  table.draw(view, {
+    showRowNumber: true,
+    width: '100%',
+    height: '100%',
+    allowHtml: true,
+    columns: colWidths.map(w => ({ width: w })),
+    cssClassNames: { tableCell: 'nowrap' }
+  });
+}  
     
 // --- Event handlers ---
 function onYearChange() {
@@ -499,7 +508,7 @@ function escapeHtml(str) {
 window.deleteRow = async function deleteRow(rowId, name, email, rowState) {
   const profile = getUserProfile();
   const role = profile?.role || "state_admin";
-  const allowedStates = getUserStates();
+  const allowedStates = getUserStates().map(s ==> s.toLower().trim();
   const userStates = getUserStates().join(","); // e.g."maryland, virginia"
   
   const safeRowState = (rowState || "").toLowerCase().trim();
