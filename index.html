@@ -684,21 +684,51 @@ document.getElementById("modifyForm").addEventListener("submit", async (e) => {
     return;
   }
 
+  // Collect all values
+  const calls    = document.getElementById("modCalls").value;
+  const tilawat  = document.getElementById("modTilawat").value;
+  const naat     = document.getElementById("modNaat").value;
+  const bayan    = document.getElementById("modBayan").value;
+  const halqa    = document.getElementById("modHalqa").value;
+  const sunnahs  = document.getElementById("modSunnahs").value;
+  const dua      = document.getElementById("modDua").value;
+  const booklet  = document.getElementById("modBooklet").value;
+
+  // ✅ Confirmation dialog with summary preview
+  const summary = `
+You are about to modify this row with the following values:
+
+- Participants: ${participantsValue}
+- Calls: ${calls}
+- Tilawat: ${tilawat}
+- Naat: ${naat}
+- Bayan (minutes): ${bayan}
+- Halqa: ${halqa}
+- Sunnahs: ${sunnahs}
+- Dua: ${dua}
+- Booklet: ${booklet}
+
+Do you want to proceed?`;
+
+  if (!confirm(summary)) {
+    return; // stop if user cancels
+  }
+
   const payload = {
     rowId: currentRowId,
     userEmail: profile.email,
     userRole: role,
     userStates: userStates,
-    actionType: "modify",   // 👈 explicit flag
+    actionType: "modify",
     participants: participantsValue,
-    calls: document.getElementById("modCalls").value,
-    tilawat: document.getElementById("modTilawat").value,
-    naat: document.getElementById("modNaat").value,
-    bayan: document.getElementById("modBayan").value,
-    halqa: document.getElementById("modHalqa").value,
-    sunnahs: document.getElementById("modSunnahs").value,
-    dua: document.getElementById("modDua").value,
-    booklet: document.getElementById("modBooklet").value
+    calls,
+    tilawat,
+    naat,
+    bayan,
+    halqa,
+    sunnahs,
+    dua,
+    booklet
   };
 
   console.log("Modify payload:", payload);
