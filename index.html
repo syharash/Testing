@@ -608,15 +608,7 @@ function escapeHtml(str) {
 }
 
 // Expose globally in your type="module" script
-window.deleteRow = async function deleteRow(rowId, name, email, rowState) {
-  const profile = getUserProfile();
-  const role = profile?.role || "state_admin";
-  const allowedStates = getUserStates().map(s => String(s).toLowerCase().trim());
-  const userStates = getUserStates().join(","); // e.g."maryland, virginia"
-  
-  const safeRowState = (rowState || "").toLowerCase().trim();
 
-  
 window.deleteRow = async function deleteRow(rowId, name, email, rowState) {
   const profile = getUserProfile();
   const role = profile?.role || "state_admin";
