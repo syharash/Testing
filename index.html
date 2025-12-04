@@ -839,6 +839,9 @@ window.openModifyDialog = function (
     
 window.closeModifyDialog = function () {
   document.getElementById("modifyModal").style.display = "none";
+  // Clear highlight when modal closes
+  const tableRows = document.querySelectorAll('#table_div table tbody tr');
+  tableRows.forEach(r => r.classList.remove('highlight-row'));
 };
     
 </script>
