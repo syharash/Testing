@@ -555,6 +555,7 @@ function drawFilteredView() {
     columns: colWidths.map(w => ({ width: w })),
     cssClassNames: { tableCell: 'nowrap' }
   });
+  console.log("City:", city, "→ Derived State:", state);
 }  
     
 // --- Event handlers ---
@@ -741,6 +742,7 @@ window.openModifyDialog = function(rowId, state,
   document.getElementById("modBooklet").value      = booklet || "";
 
   document.getElementById("modifyModal").style.display = "block";
+  console.log("City:", city, "→ Derived State:", state);
 };
   
 </script>
