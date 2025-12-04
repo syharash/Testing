@@ -726,7 +726,7 @@ function reloadData(callback) {
     if (callback) callback();
   });
 }
-
+   
 window.openModifyDialog = function (
   rowId, state,
   participants, calls, tilawat, naat,
@@ -769,8 +769,11 @@ window.openModifyDialog = function (
   setDropdown("modBooklet", booklet);
 
   document.getElementById("modifyModal").style.display = "block";
+}
+
+window.closeModifyDialog = function () {
+  document.getElementById("modifyModal").style.display = "none";
 };
-    
 </script>
 </body>
 </html>     
