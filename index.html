@@ -557,6 +557,70 @@ window.deleteRow = async function deleteRow(rowId, name, email, rowState) {
   }
 };
 
+let currentRowId = null;
+
+function openModifyDialog(rowId, state) {
+  const profile = getUserProfile();
+  const role = profile?.role || "state_admin";
+  const allowedStates = getUserStates().map(s => s.toLowerCase().trim());
+  const safeRowState = (state || "").toLowerCase().trim();
+
+  // Authorization check
+  if (role !== "global_admin" && !allowedStates.includes(safeRowState)) {
+    alert(`You are not authorized to modify rows for ${state || "Unknown State"}.`);
+    return;
+  }
+
+  currentRowId = rowId;
+  document.getElementById("modifyModal").style.display = "block";
+}
+
+// To modify the values for any mistakes
+    
+function closeModifyDialog() {
+  document.getElementById("modifyModal").style.display = "none";
+  currentRowId = null;
+}
+
+document.getElementById("modifyForm").addEventListener("submit", async (e) => {
+  e.preventDefault();
+
+  const profile = getUserProfile();
+  const role = profile?.role || "state_admin";
+  const userStates = getUserStates().join(",");
+
+  const payload = {
+    rowId: currentRowId,
+    userEmail: profile.email,
+    userRole: role,
+    userStates: userStates,
+    participants: document.getElementById("modParticipants").value,
+    calls: document.getElementById("modCalls").value,
+    tilawat: document.getElementById("modTilawat").value,
+    naat: document.getElementById("modNaat").value,
+    bayan: document.getElementById("modBayan").value,
+    halqa: document.getElementById("modHalqa").value,
+    sunnahs: document.getElementById("modSunnahs").value,
+    dua: document.getElementById("modDua").value,
+    booklet: document.getElementById("modBooklet").value
+  };
+
+  const url = "YOUR_SCRIPT_URL" + "?" + new URLSearchParams(payload).toString();
+
+  try {
+    const response = await fetch(url);
+    const result = await response.text();
+    alert(result);
+    closeModifyDialog();
+    reloadData(() => {
+      refreshFilterOptions();
+      drawFilteredView();
+    });
+  } catch (err) {
+    alert("Modify failed: " + err.message);
+  }
+});
+    
 // To refresh the page after the successful deletion of the row(s)
     
 function reloadData(callback) {
