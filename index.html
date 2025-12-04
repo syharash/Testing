@@ -208,6 +208,14 @@ function getStateFromCity(city) {
       return state;
     }
   }
+
+  // 🔧 Fallback: try partial match
+  for (const [state, cities] of Object.entries(stateCityMap)) {
+    if (cities.some(c => normalizedCity.includes(c.toLowerCase().trim()))) {
+      return state;
+    }
+  }
+
   return "";
 }
     
