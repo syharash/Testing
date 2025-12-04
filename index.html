@@ -616,10 +616,9 @@ window.deleteRow = async function deleteRow(rowId, name, email, rowState) {
   const userStates = getUserStates().join(",");
   const safeRowState = (rowState || "").toLowerCase().trim();
 
-  // Authorization check (relaxed – let backend decide)
-  if (role !== "global_admin" && !allowedStates.includes(safeRowState)) {
-    console.warn(`Frontend: state mismatch for ${rowState || "Unknown State"}`, { role, allowedStates, safeRowState });
-    // Do not block here – backend will enforce authorization
+  // Only warn if safeRowState is non-empty and mismatched
+  if (role !== "global_admin" && safeRowState && !allowedStates.includes(safeRowState)) {
+    console.warn(`Frontend: state mismatch for ${rowState}`, { role, allowedStates, safeRowState });
   }
 
   if (!confirm(`Are you sure you want to delete ${name} (${email})?`)) return;
@@ -737,8 +736,9 @@ window.openModifyDialog = function (
   const allowedStates = getUserStates().map(s => s.toLowerCase().trim());
   const safeRowState = (state || "").toLowerCase().trim();
 
-  if (role !== "global_admin" && !allowedStates.includes(safeRowState)) {
-    console.warn(`Frontend: state mismatch for ${state || "Unknown State"}`, { role, allowedStates, safeRowState });
+  // Only warn if safeRowState is non-empty and mismatched
+  if (role !== "global_admin" && safeRowState && !allowedStates.includes(safeRowState)) {
+    console.warn(`Frontend: state mismatch for ${state}`, { role, allowedStates, safeRowState });
   }
 
   currentRowId = rowId;
@@ -769,11 +769,12 @@ window.openModifyDialog = function (
   setDropdown("modBooklet", booklet);
 
   document.getElementById("modifyModal").style.display = "block";
-}
-
+};
+    
 window.closeModifyDialog = function () {
   document.getElementById("modifyModal").style.display = "none";
 };
+    
 </script>
 </body>
 </html>     
