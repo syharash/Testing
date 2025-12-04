@@ -532,6 +532,7 @@ function drawFilteredView() {
         Modify
       </button>
     `;
+    console.log(`Row ${row}: City = ${city}, Derived State = ${state}`);
   }
 });
 
@@ -642,6 +643,7 @@ window.deleteRow = async function deleteRow(rowId, name, email, rowState) {
   } catch (err) {
     alert("Delete failed: " + err.message);
   }
+  console.warn("Authorization failed:", { role, allowedStates, safeRowState });
 };
 
 let currentRowId = null;
@@ -673,7 +675,7 @@ document.getElementById("modifyForm").addEventListener("submit", async (e) => {
     dua: document.getElementById("modDua").value,
     booklet: document.getElementById("modBooklet").value
   };
-
+  console.log("Modify payload:", payload);
   const url = "https://script.google.com/macros/s/AKfycbxo6Ym-YWoqoJX_jugLJq4I7UwqbsKAaBGUpHvxmjpiWkN0u1KIulWWirqRkbugGpg9/exec" + "?" + new URLSearchParams(payload).toString();
 
   try {
@@ -737,6 +739,7 @@ window.openModifyDialog = function (
   document.getElementById("modBooklet").value      = booklet || "";
 
   document.getElementById("modifyModal").style.display = "block";
+  console.warn("Authorization failed:", { role, allowedStates, safeRowState });
 };
   
 </script>
