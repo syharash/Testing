@@ -738,24 +738,36 @@ window.openModifyDialog = function (
   const safeRowState = (state || "").toLowerCase().trim();
 
   if (role !== "global_admin" && !allowedStates.includes(safeRowState)) {
-  console.warn(`Frontend: state mismatch for ${state || "Unknown State"}`, { role, allowedStates, safeRowState });
-  // Do not block here – backend will enforce authorization
+    console.warn(`Frontend: state mismatch for ${state || "Unknown State"}`, { role, allowedStates, safeRowState });
+    // Do not block here – backend will enforce authorization
   }
 
   currentRowId = rowId;
 
+  // Text fields
   document.getElementById("modParticipants").value = participants || "";
   document.getElementById("modCalls").value        = calls || "";
   document.getElementById("modTilawat").value      = tilawat || "";
-  document.getElementById("modNaat").value         = naat || "";
   document.getElementById("modBayan").value        = bayan || "";
-  document.getElementById("modHalqa").value        = halqa || "";
-  document.getElementById("modSunnahs").value      = sunnahs || "";
-  document.getElementById("modDua").value          = dua || "";
-  document.getElementById("modBooklet").value      = booklet || "";
+
+  // Dropdowns (Yes/No)
+  const setDropdown = (id, value) => {
+    const el = document.getElementById(id);
+    const normalized = String(value || "").toLowerCase().trim();
+    if (normalized === "yes" || normalized === "no") {
+      el.value = normalized.charAt(0).toUpperCase() + normalized.slice(1); // "Yes" or "No"
+    } else {
+      el.value = "";
+    }
+  };
+
+  setDropdown("modNaat", naat);
+  setDropdown("modHalqa", halqa);
+  setDropdown("modSunnahs", sunnahs);
+  setDropdown("modDua", dua);
+  setDropdown("modBooklet", booklet);
 
   document.getElementById("modifyModal").style.display = "block";
-  console.warn("Authorization failed:", { role, allowedStates, safeRowState });
 };
   
 </script>
