@@ -17,7 +17,11 @@
       color: #0066cc;
       text-align: center;
     }  
-
+/* Highlight selected row */
+.highlight-row {
+  background-color: #ffeeba !important; /* soft amber highlight */
+  transition: background-color 0.3s ease;
+}
 #modifyModal {
   position: fixed;
   top: 50%;
@@ -518,38 +522,45 @@ function drawFilteredView() {
   const cols = [];
   for (let i = 0; i < numCols - 1; i++) cols.push(i); // show all but RowID
 
-  cols.push({
-    type: 'string',
-    label: 'Actions',
-    calc: function (dt, row) {
-      const rowId       = dt.getValue(row, numCols - 1); // RowID
-      const email       = dt.getValue(row, 0);           // Email (col B)
-      const name        = dt.getValue(row, 1);           // Name (col C)
-      const city        = String(dt.getValue(row, 4) || "").trim(); // City (col F)
-      const state       = getStateFromCity(city);
-      const participants= dt.getValue(row, 5);
-      const calls       = dt.getValue(row, 6);
-      const tilawat     = dt.getValue(row, 7);
-      const naat        = dt.getValue(row, 8);
-      const bayan       = dt.getValue(row, 9);
-      const halqa       = dt.getValue(row, 10);
-      const sunnahs     = dt.getValue(row, 11);
-      const dua         = dt.getValue(row, 12);
-      const booklet     = dt.getValue(row, 13);
+cols.push({
+  type: 'string',
+  label: 'Actions',
+calc: function (dt, row) {
+  const rowId       = dt.getValue(row, numCols - 1); // RowID
+  const email       = dt.getValue(row, 0);           // Email
+  const name        = dt.getValue(row, 1);           // Name
+  const city        = String(dt.getValue(row, 4) || "").trim(); // City
+  const state       = getStateFromCity(city);
+  const participants= dt.getValue(row, 5);
+  const calls       = dt.getValue(row, 6);
+  const tilawat     = dt.getValue(row, 7);
+  const naat        = dt.getValue(row, 8);
+  const bayan       = dt.getValue(row, 9);
+  const halqa       = dt.getValue(row, 10);
+  const sunnahs     = dt.getValue(row, 11);
+  const dua         = dt.getValue(row, 12);
+  const booklet     = dt.getValue(row, 13);
 
-      return `
-        <button class="delete-btn" 
-          onclick="deleteRow('${rowId}', '${name}', '${email}', '${state}', '${city}')">
-          Delete
-        </button>
-        <button class="modify-btn"
-          onclick="openModifyDialog('${rowId}', '${state}',
-            '${participants}', '${calls}', '${tilawat}', '${naat}',
-            '${bayan}', '${halqa}', '${sunnahs}', '${dua}', '${booklet}')">
-          Modify
-        </button>
-      `;
-    }
+  // Helper to highlight the row
+  const highlightRow = `
+    const tableRows = document.querySelectorAll('#table_div table tbody tr');
+    tableRows.forEach(r => r.classList.remove('highlight-row'));
+    if (tableRows[${row}]) tableRows[${row}].classList.add('highlight-row');
+  `;
+
+  return `
+    <button class="delete-btn" 
+      onclick="${highlightRow} deleteRow('${rowId}', '${name}', '${email}', '${state}', '${city}')">
+      Delete
+    </button>
+    <button class="modify-btn"
+      onclick="${highlightRow} openModifyDialog('${rowId}', '${state}',
+        '${participants}', '${calls}', '${tilawat}', '${naat}',
+        '${bayan}', '${halqa}', '${sunnahs}', '${dua}', '${booklet}')">
+      Modify
+    </button>
+  `;
+}
   });
 
   view.setColumns(cols);
@@ -677,7 +688,7 @@ Do you want to proceed?`;
     console.error("Delete error:", err);
   }
 };
-
+    
 let currentRowId = null;
 
 function closeModifyDialog() {
