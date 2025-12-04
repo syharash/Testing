@@ -616,19 +616,32 @@ window.deleteRow = async function deleteRow(rowId, name, email, rowState) {
   
   const safeRowState = (rowState || "").toLowerCase().trim();
 
+  
+window.deleteRow = async function deleteRow(rowId, name, email, rowState) {
+  const profile = getUserProfile();
+  const role = profile?.role || "state_admin";
+  const allowedStates = getUserStates().map(s => String(s).toLowerCase().trim());
+  const userStates = getUserStates().join(",");
+  const safeRowState = (rowState || "").toLowerCase().trim();
+
   // Authorization check (relaxed – let backend decide)
   if (role !== "global_admin" && !allowedStates.includes(safeRowState)) {
     console.warn(`Frontend: state mismatch for ${rowState || "Unknown State"}`, { role, allowedStates, safeRowState });
-  // Do not block here – backend will enforce authorization
-  }  
+    // Do not block here – backend will enforce authorization
+  }
 
   if (!confirm(`Are you sure you want to delete ${name} (${email})?`)) return;
 
+  const payload = {
+    rowId,
+    userEmail: profile.email,
+    userRole: role,
+    userStates: userStates,
+    actionType: "delete"
+  };
+
   const url = "https://script.google.com/macros/s/AKfycbxo6Ym-YWoqoJX_jugLJq4I7UwqbsKAaBGUpHvxmjpiWkN0u1KIulWWirqRkbugGpg9/exec"
-    + "?rowId=" + encodeURIComponent(rowId)
-    + "&userEmail=" + encodeURIComponent(profile.email)
-    + "&userRole=" + encodeURIComponent(role)
-    + "&userStates=" + encodeURIComponent(userStates);
+    + "?" + new URLSearchParams(payload).toString();
 
   try {
     const response = await fetch(url);
@@ -642,8 +655,8 @@ window.deleteRow = async function deleteRow(rowId, name, email, rowState) {
     });
   } catch (err) {
     alert("Delete failed: " + err.message);
+    console.error("Delete error:", err);
   }
-  console.warn("Authorization failed:", { role, allowedStates, safeRowState });
 };
 
 let currentRowId = null;
@@ -660,12 +673,19 @@ document.getElementById("modifyForm").addEventListener("submit", async (e) => {
   const role = profile?.role || "state_admin";
   const userStates = getUserStates().join(",");
 
+  const participantsValue = document.getElementById("modParticipants").value.trim();
+  if (!participantsValue) {
+    alert("Participants field is required to modify the row.");
+    return;
+  }
+
   const payload = {
     rowId: currentRowId,
     userEmail: profile.email,
     userRole: role,
     userStates: userStates,
-    participants: document.getElementById("modParticipants").value,
+    actionType: "modify",   // 👈 explicit flag
+    participants: participantsValue,
     calls: document.getElementById("modCalls").value,
     tilawat: document.getElementById("modTilawat").value,
     naat: document.getElementById("modNaat").value,
@@ -675,8 +695,11 @@ document.getElementById("modifyForm").addEventListener("submit", async (e) => {
     dua: document.getElementById("modDua").value,
     booklet: document.getElementById("modBooklet").value
   };
+
   console.log("Modify payload:", payload);
-  const url = "https://script.google.com/macros/s/AKfycbxo6Ym-YWoqoJX_jugLJq4I7UwqbsKAaBGUpHvxmjpiWkN0u1KIulWWirqRkbugGpg9/exec" + "?" + new URLSearchParams(payload).toString();
+
+  const url = "https://script.google.com/macros/s/AKfycbxo6Ym-YWoqoJX_jugLJq4I7UwqbsKAaBGUpHvxmjpiWkN0u1KIulWWirqRkbugGpg9/exec"
+    + "?" + new URLSearchParams(payload).toString();
 
   try {
     const response = await fetch(url);
@@ -689,6 +712,7 @@ document.getElementById("modifyForm").addEventListener("submit", async (e) => {
     });
   } catch (err) {
     alert("Modify failed: " + err.message);
+    console.error("Modify error:", err);
   }
 });
     
