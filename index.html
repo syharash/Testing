@@ -616,11 +616,11 @@ window.deleteRow = async function deleteRow(rowId, name, email, rowState) {
   
   const safeRowState = (rowState || "").toLowerCase().trim();
 
-  // Authorization check
+  // Authorization check (relaxed – let backend decide)
   if (role !== "global_admin" && !allowedStates.includes(safeRowState)) {
-    alert(`You are not authorized to delete rows for ${rowState || "Unknown State"}.`);
-    return;
-  }
+    console.warn(`Frontend: state mismatch for ${rowState || "Unknown State"}`, { role, allowedStates, safeRowState });
+  // Do not block here – backend will enforce authorization
+  }  
 
   if (!confirm(`Are you sure you want to delete ${name} (${email})?`)) return;
 
@@ -722,8 +722,8 @@ window.openModifyDialog = function (
   const safeRowState = (state || "").toLowerCase().trim();
 
   if (role !== "global_admin" && !allowedStates.includes(safeRowState)) {
-    alert(`You are not authorized to modify rows for ${state || "Unknown State"}.`);
-    return;
+  console.warn(`Frontend: state mismatch for ${state || "Unknown State"}`, { role, allowedStates, safeRowState });
+  // Do not block here – backend will enforce authorization
   }
 
   currentRowId = rowId;
