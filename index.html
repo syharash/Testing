@@ -748,6 +748,9 @@ window.openModifyDialog = function (
   document.getElementById("modCalls").value        = calls || "";
   document.getElementById("modBayan").value        = bayan || "";
 
+  // Text field (tilawat)
+  document.getElementById("modTilawat").value      = tilawat || "";
+
   // Dropdowns (Yes/No)
   const setDropdown = (id, value) => {
     const el = document.getElementById(id);
@@ -759,7 +762,6 @@ window.openModifyDialog = function (
     }
   };
 
-  setDropdown("modTilawat", tilawat);
   setDropdown("modNaat", naat);
   setDropdown("modHalqa", halqa);
   setDropdown("modSunnahs", sunnahs);
