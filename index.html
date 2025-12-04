@@ -440,10 +440,24 @@ function drawFilteredView() {
     const name  = dt.getValue(row, 2);           // Name
     const city  = String(dt.getValue(row, 5) || "").trim();
     const state = getStateFromCity(city);
+    const participants = dt.getValue(row, 6);
+    const calls        = dt.getValue(row, 7);
+    const tilawat      = dt.getValue(row, 8);
+    const naat         = dt.getValue(row, 9);
+    const bayan        = dt.getValue(row, 10);
+    const halqa        = dt.getValue(row, 11);
+    const sunnahs      = dt.getValue(row, 12);
+    const dua          = dt.getValue(row, 13);
+    const booklet      = dt.getValue(row, 14);
 
     return `
       <button class="delete-btn" onclick="deleteRow('${rowId}', '${name}', '${email}', '${state}')">Delete</button>
-      <button class="modify-btn" onclick="openModifyDialog('${rowId}', '${state}')">Modify</button>
+      <button class="modify-btn"
+        onclick="openModifyDialog('${rowId}', '${state}',
+          '${participants}', '${calls}', '${tilawat}', '${naat}',
+          '${bayan}', '${halqa}', '${sunnahs}', '${dua}', '${booklet}')">
+        Modify
+      </button>
     `;
   }
 });
@@ -605,7 +619,7 @@ document.getElementById("modifyForm").addEventListener("submit", async (e) => {
     booklet: document.getElementById("modBooklet").value
   };
 
-  const url = "YOUR_SCRIPT_URL" + "?" + new URLSearchParams(payload).toString();
+  const url = "https://script.google.com/macros/s/AKfycbxo6Ym-YWoqoJX_jugLJq4I7UwqbsKAaBGUpHvxmjpiWkN0u1KIulWWirqRkbugGpg9/exec" + "?" + new URLSearchParams(payload).toString();
 
   try {
     const response = await fetch(url);
