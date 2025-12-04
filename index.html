@@ -513,15 +513,15 @@ function drawFilteredView() {
     const name  = dt.getValue(row, 2);           // Name
     const city  = String(dt.getValue(row, 5) || "").trim();
     const state = getStateFromCity(city);
-    const participants = dt.getValue(row, 6);
-    const calls        = dt.getValue(row, 7);
-    const tilawat      = dt.getValue(row, 8);
-    const naat         = dt.getValue(row, 9);
-    const bayan        = dt.getValue(row, 10);
-    const halqa        = dt.getValue(row, 11);
-    const sunnahs      = dt.getValue(row, 12);
-    const dua          = dt.getValue(row, 13);
-    const booklet      = dt.getValue(row, 14);
+    const participants = dt.getValue(row, 5);
+    const calls        = dt.getValue(row, 6);
+    const tilawat      = dt.getValue(row, 7);
+    const naat         = dt.getValue(row, 8);
+    const bayan        = dt.getValue(row, 9);
+    const halqa        = dt.getValue(row, 10);
+    const sunnahs      = dt.getValue(row, 11);
+    const dua          = dt.getValue(row, 12);
+    const booklet      = dt.getValue(row, 13);
 
     return `
       <button class="delete-btn" onclick="deleteRow('${rowId}', '${name}', '${email}', '${state}')">Delete</button>
