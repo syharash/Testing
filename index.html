@@ -519,42 +519,44 @@ function drawFilteredView() {
   for (let i = 0; i < numCols - 1; i++) cols.push(i); // show all but RowID
 
   cols.push({
-  type: 'string',
-  label: 'Actions',
-  calc: function (dt, row) {
-    const rowId = dt.getValue(row, numCols - 1); // RowID
-    const email = dt.getValue(row, 1);           // Email
-    const name  = dt.getValue(row, 2);           // Name
-    const city  = String(dt.getValue(row, 5) || "").trim();
-    const state = getStateFromCity(city);
-    const participants = dt.getValue(row, 5);
-    const calls        = dt.getValue(row, 6);
-    const tilawat      = dt.getValue(row, 7);
-    const naat         = dt.getValue(row, 8);
-    const bayan        = dt.getValue(row, 9);
-    const halqa        = dt.getValue(row, 10);
-    const sunnahs      = dt.getValue(row, 11);
-    const dua          = dt.getValue(row, 12);
-    const booklet      = dt.getValue(row, 13);
+    type: 'string',
+    label: 'Actions',
+    calc: function (dt, row) {
+      const rowId       = dt.getValue(row, numCols - 1); // RowID
+      const email       = dt.getValue(row, 0);           // Email (col B)
+      const name        = dt.getValue(row, 1);           // Name (col C)
+      const city        = String(dt.getValue(row, 4) || "").trim(); // City (col F)
+      const state       = getStateFromCity(city);
+      const participants= dt.getValue(row, 5);
+      const calls       = dt.getValue(row, 6);
+      const tilawat     = dt.getValue(row, 7);
+      const naat        = dt.getValue(row, 8);
+      const bayan       = dt.getValue(row, 9);
+      const halqa       = dt.getValue(row, 10);
+      const sunnahs     = dt.getValue(row, 11);
+      const dua         = dt.getValue(row, 12);
+      const booklet     = dt.getValue(row, 13);
 
-    return `
-      <button class="delete-btn" onclick="deleteRow('${rowId}', '${name}', '${email}', '${state}')">Delete</button>
-      <button class="modify-btn"
-        onclick="openModifyDialog('${rowId}', '${state}',
-          '${participants}', '${calls}', '${tilawat}', '${naat}',
-          '${bayan}', '${halqa}', '${sunnahs}', '${dua}', '${booklet}')">
-        Modify
-      </button>
-    `;
-    console.log(`Row ${row}: City = ${city}, Derived State = ${state}`);
-  }
-});
+      return `
+        <button class="delete-btn" 
+          onclick="deleteRow('${rowId}', '${name}', '${email}', '${state}', '${city}')">
+          Delete
+        </button>
+        <button class="modify-btn"
+          onclick="openModifyDialog('${rowId}', '${state}',
+            '${participants}', '${calls}', '${tilawat}', '${naat}',
+            '${bayan}', '${halqa}', '${sunnahs}', '${dua}', '${booklet}')">
+          Modify
+        </button>
+      `;
+    }
+  });
 
   view.setColumns(cols);
 
   const colWidths = getColumnWidths(view);
   colWidths[0] = 220;  // Email column
-  colWidths[1] = 260; // Name column      
+  colWidths[1] = 260;  // Name column      
   colWidths[2] = 160;  // Month & Year column
   colWidths[4] = 180;  // City column
 
@@ -566,7 +568,8 @@ function drawFilteredView() {
     columns: colWidths.map(w => ({ width: w })),
     cssClassNames: { tableCell: 'nowrap' }
   });
-}  
+}
+
     
 // --- Event handlers ---
 function onYearChange() {
@@ -623,7 +626,7 @@ function escapeHtml(str) {
 
 // Expose globally in your type="module" script
 
-window.deleteRow = async function deleteRow(rowId, name, email, rowState) {
+window.deleteRow = async function deleteRow(rowId, name, email, rowState, rowCity) {
   const profile = getUserProfile();
   const role = profile?.role || "state_admin";
   const allowedStates = getUserStates().map(s => String(s).toLowerCase().trim());
@@ -635,7 +638,18 @@ window.deleteRow = async function deleteRow(rowId, name, email, rowState) {
     console.warn(`Frontend: state mismatch for ${rowState}`, { role, allowedStates, safeRowState });
   }
 
-  if (!confirm(`Are you sure you want to delete ${name} (${email})?`)) return;
+  // ✅ Confirmation dialog with summary preview
+  const summary = `
+You are about to delete this row:
+
+- Name: ${name}
+- Email: ${email}
+- State: ${rowState || "Unknown"}
+- City: ${rowCity || "Unknown"}
+
+Do you want to proceed?`;
+
+  if (!confirm(summary)) return;
 
   const payload = {
     rowId,
