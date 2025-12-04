@@ -120,8 +120,22 @@ body::before {
   <form id="modifyForm">
     <label>Number of Participants <input id="modParticipants"></label>
     <label>Invitation through calls <input id="modCalls"></label>
-    <label>Intentions before Tilawat <input id="modTilawat"></label>
-    <label>Intentions before Naat <input id="modNaat"></label>
+    <label>Intentions before Tilawat
+      <select id="modTilawat">
+        <option value="">--Select--</option>
+        <option value="Yes">Yes</option>
+        <option value="No">No</option>
+      </select>
+    </label>
+
+    <label>Intentions before Naat
+      <select id="modNaat">
+        <option value="">--Select--</option>
+        <option value="Yes">Yes</option>
+        <option value="No">No</option>
+      </select>
+    </label>
+    
     <label>Duration of Bayan (minutes) <input id="modBayan"></label>
 
     <!-- Dropdowns for Yes/No fields -->
@@ -736,7 +750,6 @@ window.openModifyDialog = function (
   const allowedStates = getUserStates().map(s => s.toLowerCase().trim());
   const safeRowState = (state || "").toLowerCase().trim();
 
-  // Only warn if safeRowState is non-empty and mismatched
   if (role !== "global_admin" && safeRowState && !allowedStates.includes(safeRowState)) {
     console.warn(`Frontend: state mismatch for ${state}`, { role, allowedStates, safeRowState });
   }
@@ -747,9 +760,6 @@ window.openModifyDialog = function (
   document.getElementById("modParticipants").value = participants || "";
   document.getElementById("modCalls").value        = calls || "";
   document.getElementById("modBayan").value        = bayan || "";
-
-  // Text field (tilawat)
-  document.getElementById("modTilawat").value      = tilawat || "";
 
   // Dropdowns (Yes/No)
   const setDropdown = (id, value) => {
@@ -762,6 +772,7 @@ window.openModifyDialog = function (
     }
   };
 
+  setDropdown("modTilawat", tilawat);
   setDropdown("modNaat", naat);
   setDropdown("modHalqa", halqa);
   setDropdown("modSunnahs", sunnahs);
