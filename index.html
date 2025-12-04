@@ -639,7 +639,37 @@ function reloadData(callback) {
     if (callback) callback();
   });
 }
-    
+
+window.openModifyDialog = function(rowId, state,
+  participants, calls, tilawat, naat,
+  bayan, halqa, sunnahs, dua, booklet) {
+
+  const profile = getUserProfile();
+  const role = profile?.role || "state_admin";
+  const allowedStates = getUserStates().map(s => s.toLowerCase().trim());
+  const safeRowState = (state || "").toLowerCase().trim();
+
+  if (role !== "global_admin" && !allowedStates.includes(safeRowState)) {
+    alert(`You are not authorized to modify rows for ${state || "Unknown State"}.`);
+    return;
+  }
+
+  currentRowId = rowId;
+
+  // Pre-fill modal fields
+  document.getElementById("modParticipants").value = participants || "";
+  document.getElementById("modCalls").value        = calls || "";
+  document.getElementById("modTilawat").value      = tilawat || "";
+  document.getElementById("modNaat").value         = naat || "";
+  document.getElementById("modBayan").value        = bayan || "";
+  document.getElementById("modHalqa").value        = halqa || "";
+  document.getElementById("modSunnahs").value      = sunnahs || "";
+  document.getElementById("modDua").value          = dua || "";
+  document.getElementById("modBooklet").value      = booklet || "";
+
+  document.getElementById("modifyModal").style.display = "block";
+};
+  
 </script>
 </body>
 </html>     
