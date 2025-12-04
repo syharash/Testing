@@ -525,43 +525,43 @@ function drawFilteredView() {
 cols.push({
   type: 'string',
   label: 'Actions',
-calc: function (dt, row) {
-  const rowId       = dt.getValue(row, numCols - 1); // RowID
-  const email       = dt.getValue(row, 0);           // Email
-  const name        = dt.getValue(row, 1);           // Name
-  const city        = String(dt.getValue(row, 4) || "").trim(); // City
-  const state       = getStateFromCity(city);
-  const participants= dt.getValue(row, 5);
-  const calls       = dt.getValue(row, 6);
-  const tilawat     = dt.getValue(row, 7);
-  const naat        = dt.getValue(row, 8);
-  const bayan       = dt.getValue(row, 9);
-  const halqa       = dt.getValue(row, 10);
-  const sunnahs     = dt.getValue(row, 11);
-  const dua         = dt.getValue(row, 12);
-  const booklet     = dt.getValue(row, 13);
+  calc: function (dt, row) {
+    const rowId       = dt.getValue(row, numCols - 1); // RowID
+    const email       = dt.getValue(row, 0);           // Email
+    const name        = dt.getValue(row, 1);           // Name
+    const city        = String(dt.getValue(row, 4) || "").trim(); // City
+    const state       = getStateFromCity(city);
+    const participants= dt.getValue(row, 5);
+    const calls       = dt.getValue(row, 6);
+    const tilawat     = dt.getValue(row, 7);
+    const naat        = dt.getValue(row, 8);
+    const bayan       = dt.getValue(row, 9);
+    const halqa       = dt.getValue(row, 10);
+    const sunnahs     = dt.getValue(row, 11);
+    const dua         = dt.getValue(row, 12);
+    const booklet     = dt.getValue(row, 13);
 
-  // Helper to highlight the row
-  const highlightRow = `
-    const tableRows = document.querySelectorAll('#table_div table tbody tr');
-    tableRows.forEach(r => r.classList.remove('highlight-row'));
-    if (tableRows[${row}]) tableRows[${row}].classList.add('highlight-row');
-  `;
+    // Helper to highlight the row
+    const highlightRow = `
+      const tableRows = document.querySelectorAll('#table_div table tbody tr');
+      tableRows.forEach(r => r.classList.remove('highlight-row'));
+      if (tableRows[${row}]) tableRows[${row}].classList.add('highlight-row');
+    `;
 
-  return `
-    <button class="delete-btn" 
-      onclick="${highlightRow} deleteRow('${rowId}', '${name}', '${email}', '${state}', '${city}')">
-      Delete
-    </button>
-    <button class="modify-btn"
-      onclick="${highlightRow} openModifyDialog('${rowId}', '${state}',
-        '${participants}', '${calls}', '${tilawat}', '${naat}',
-        '${bayan}', '${halqa}', '${sunnahs}', '${dua}', '${booklet}')">
-      Modify
-    </button>
-  `;
-}
-  });
+    return `
+      <button class="delete-btn" 
+        onclick="${highlightRow} deleteRow('${rowId}', '${name}', '${email}', '${state}', '${city}')">
+        Delete
+      </button>
+      <button class="modify-btn"
+        onclick="${highlightRow} openModifyDialog('${rowId}', '${state}',
+          '${participants}', '${calls}', '${tilawat}', '${naat}',
+          '${bayan}', '${halqa}', '${sunnahs}', '${dua}', '${booklet}')">
+        Modify
+      </button>
+    `;
+  }
+});
 
   view.setColumns(cols);
 
