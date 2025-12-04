@@ -206,12 +206,12 @@ function getStateFromCity(city) {
   for (const [state, cities] of Object.entries(stateCityMap)) {
     for (const c of cities) {
       const normalizedC = String(c || "").toLowerCase().trim();
-      if (normalizedCity === normalizedC || normalizedC.includes(normalizedCity)) {
+      const baseCity = normalizedC.split(",")[0].trim(); // strip ", ST"
+      if (normalizedCity === normalizedC || normalizedCity === baseCity) {
         return state;
       }
     }
   }
-
   return "";
 }
     
@@ -719,7 +719,6 @@ window.openModifyDialog = function (
   const allowedStates = getUserStates().map(s => s.toLowerCase().trim());
   const safeRowState = (state || "").toLowerCase().trim();
 
-  // Authorization check
   if (role !== "global_admin" && !allowedStates.includes(safeRowState)) {
     alert(`You are not authorized to modify rows for ${state || "Unknown State"}.`);
     return;
@@ -727,7 +726,6 @@ window.openModifyDialog = function (
 
   currentRowId = rowId;
 
-  // Pre‑fill modal fields
   document.getElementById("modParticipants").value = participants || "";
   document.getElementById("modCalls").value        = calls || "";
   document.getElementById("modTilawat").value      = tilawat || "";
@@ -738,7 +736,6 @@ window.openModifyDialog = function (
   document.getElementById("modDua").value          = dua || "";
   document.getElementById("modBooklet").value      = booklet || "";
 
-  // Show modal
   document.getElementById("modifyModal").style.display = "block";
 };
   
