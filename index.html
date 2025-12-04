@@ -573,24 +573,6 @@ window.deleteRow = async function deleteRow(rowId, name, email, rowState) {
 
 let currentRowId = null;
 
-function openModifyDialog(rowId, state) {
-  const profile = getUserProfile();
-  const role = profile?.role || "state_admin";
-  const allowedStates = getUserStates().map(s => s.toLowerCase().trim());
-  const safeRowState = (state || "").toLowerCase().trim();
-
-  // Authorization check
-  if (role !== "global_admin" && !allowedStates.includes(safeRowState)) {
-    alert(`You are not authorized to modify rows for ${state || "Unknown State"}.`);
-    return;
-  }
-
-  currentRowId = rowId;
-  document.getElementById("modifyModal").style.display = "block";
-}
-
-// To modify the values for any mistakes
-    
 function closeModifyDialog() {
   document.getElementById("modifyModal").style.display = "none";
   currentRowId = null;
