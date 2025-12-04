@@ -710,15 +710,17 @@ function reloadData(callback) {
   });
 }
 
-window.openModifyDialog = function(rowId, state,
+window.openModifyDialog = function (
+  rowId, state,
   participants, calls, tilawat, naat,
-  bayan, halqa, sunnahs, dua, booklet) {
-
+  bayan, halqa, sunnahs, dua, booklet
+) {
   const profile = getUserProfile();
   const role = profile?.role || "state_admin";
   const allowedStates = getUserStates().map(s => s.toLowerCase().trim());
   const safeRowState = (state || "").toLowerCase().trim();
 
+  // Authorization check
   if (role !== "global_admin" && !allowedStates.includes(safeRowState)) {
     alert(`You are not authorized to modify rows for ${state || "Unknown State"}.`);
     return;
@@ -726,7 +728,7 @@ window.openModifyDialog = function(rowId, state,
 
   currentRowId = rowId;
 
-  // Pre-fill modal fields
+  // Pre‑fill modal fields
   document.getElementById("modParticipants").value = participants || "";
   document.getElementById("modCalls").value        = calls || "";
   document.getElementById("modTilawat").value      = tilawat || "";
@@ -737,8 +739,8 @@ window.openModifyDialog = function(rowId, state,
   document.getElementById("modDua").value          = dua || "";
   document.getElementById("modBooklet").value      = booklet || "";
 
+  // Show modal
   document.getElementById("modifyModal").style.display = "block";
-  console.log("City:", city, "→ Derived State:", state);
 };
   
 </script>
