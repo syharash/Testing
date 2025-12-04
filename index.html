@@ -78,20 +78,50 @@
 
   <div id="modifyModal" style="display:none;">
   <h3>Modify Row</h3>
-    <form id="modifyForm">
-      <label>Number of Participants <input id="modParticipants"></label>
-      <label>Invitation through calls <input id="modCalls"></label>
-      <label>Intentions before Tilawat <input id="modTilawat"></label>
-      <label>Intentions before Naat <input id="modNaat"></label>
-      <label>Duration of Bayan (minutes) <input id="modBayan"></label>
-      <label>Was Madani Halqa Conducted? <input id="modHalqa"></label>
-      <label>Was Sunnahs and Manners taught? <input id="modSunnahs"></label>
-      <label>Was Learning/Memorizing Dua conducted? <input id="modDua"></label>
-      <label>Was Pious Deed Booklet filled? <input id="modBooklet"></label>
-      <button type="submit">Save</button>
-      <button type="button" onclick="closeModifyDialog()">Cancel</button>
+  <form id="modifyForm">
+    <label>Number of Participants <input id="modParticipants"></label>
+    <label>Invitation through calls <input id="modCalls"></label>
+    <label>Intentions before Tilawat <input id="modTilawat"></label>
+    <label>Intentions before Naat <input id="modNaat"></label>
+    <label>Duration of Bayan (minutes) <input id="modBayan"></label>
+
+    <!-- Dropdowns for Yes/No fields -->
+    <label>Was Madani Halqa Conducted?
+      <select id="modHalqa">
+        <option value="">--Select--</option>
+        <option value="Yes">Yes</option>
+        <option value="No">No</option>
+      </select>
+    </label>
+
+    <label>Was Sunnahs and Manners taught?
+      <select id="modSunnahs">
+        <option value="">--Select--</option>
+        <option value="Yes">Yes</option>
+        <option value="No">No</option>
+      </select>
+    </label>
+
+    <label>Was Learning/Memorizing Dua conducted?
+      <select id="modDua">
+        <option value="">--Select--</option>
+        <option value="Yes">Yes</option>
+        <option value="No">No</option>
+      </select>
+    </label>
+
+    <label>Was Pious Deed Booklet filled?
+      <select id="modBooklet">
+        <option value="">--Select--</option>
+        <option value="Yes">Yes</option>
+        <option value="No">No</option>
+      </select>
+    </label>
+
+    <button type="submit">Save</button>
+    <button type="button" onclick="closeModifyDialog()">Cancel</button>
   </form>
-  </div>
+</div>  
     
     <div id="loading" style="display:none; margin:10px; font-weight:bold; color:#0066cc;">
       🔄 Refreshing data, please wait...
