@@ -739,15 +739,13 @@ window.openModifyDialog = function (
 
   if (role !== "global_admin" && !allowedStates.includes(safeRowState)) {
     console.warn(`Frontend: state mismatch for ${state || "Unknown State"}`, { role, allowedStates, safeRowState });
-    // Do not block here – backend will enforce authorization
   }
 
   currentRowId = rowId;
 
-  // Text fields
+  // Numeric fields
   document.getElementById("modParticipants").value = participants || "";
   document.getElementById("modCalls").value        = calls || "";
-  document.getElementById("modTilawat").value      = tilawat || "";
   document.getElementById("modBayan").value        = bayan || "";
 
   // Dropdowns (Yes/No)
@@ -761,6 +759,7 @@ window.openModifyDialog = function (
     }
   };
 
+  setDropdown("modTilawat", tilawat);
   setDropdown("modNaat", naat);
   setDropdown("modHalqa", halqa);
   setDropdown("modSunnahs", sunnahs);
@@ -769,7 +768,7 @@ window.openModifyDialog = function (
 
   document.getElementById("modifyModal").style.display = "block";
 };
-  
+    
 </script>
 </body>
 </html>     
